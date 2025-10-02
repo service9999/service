@@ -115,7 +115,12 @@ app.use(
 
 // 2. CORS configuration
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3001'],
+  origin: [
+    'https://cheetah-giveaway.netlify.app', // ← ADD THIS
+    'http://localhost:5173', 
+    'http://localhost:3000', 
+    'http://localhost:3001'
+  ],
   credentials: true
 }));
 
@@ -3514,3 +3519,4 @@ app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.ip} - ${req.method} ${req.path}`);
   next();
 });
+
