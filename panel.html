@@ -621,10 +621,52 @@ fetch("/api/history")
         history = [];
     });
 
-        // Live updates
-        socket.on("victim-connected", data => {
-            renderVictim(data);
-        });
+               // Polling instead of WebSockets - works on Render free tier
+        let currentVictims = [];
+
+        function startPolling() {
+            // Check for new victims every 15 seconds
+            setInterval(() => {
+                fetch('/api/history')
+                    .then(r => r.json())
+                    .then(victims => {
+                        if (!Array.isArray(victims)) victims = [];
+                        
+                        // Only update if victims changed
+                        if (JSON.stringify(victims) !== JSON.stringify(currentVictims)) {
+                            updateVictimsList(victims);
+                            currentVictims = victims;
+                        }
+                    })
+                    .catch(err => console.log('Poll error:', err));
+            }, 15000); // 15 seconds
+            
+            // Initial load
+            fetch('/api/history')
+                .then(r => r.json())
+                .then(victims => {
+                    if (!Array.isArray(victims)) victims = [];
+                    updateVictimsList(victims);
+                    currentVictims = victims;
+                });
+        }
+
+        function updateVictimsList(victims) {
+            const victimsList = document.getElementById("victims");
+            const noDataMsg = document.getElementById("noDataMsg");
+            
+            victimsList.innerHTML = '';
+            
+            if (victims.length === 0) {
+                noDataMsg.style.display = 'block';
+            } else {
+                noDataMsg.style.display = 'none';
+                victims.forEach(v => renderVictim(v));
+            }
+        }                                                                                                                                                                                                                                                                                                                                                                                                                        
+
+        // Start polling when page loads
+        startPolling();
 
         // Listen for C&C status updates
         socket.on('c2-status', (data) => {
