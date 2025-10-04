@@ -360,12 +360,30 @@ export function generateMarketingSite() {
             
             console.log('Form found, adding event listener...');
                 
+                // Get form values with null checks
+                const projectNameInput = this.querySelector('input[placeholder="Project Name"]');
+                const walletInput = this.querySelector('input[placeholder="Your Wallet Address (for payouts)"]');
+                const contactInput = this.querySelector('input[placeholder="Telegram Username (for support)"]');
+                const themeSelect = this.querySelector('select');
+                
+                console.log('Inputs found:', {
+                    projectName: !!projectNameInput,
+                    wallet: !!walletInput, 
+                    contact: !!contactInput,
+                    theme: !!themeSelect
+                });
+                
+                if (!projectNameInput || !walletInput) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+                
                 const formData = {
-                projectName: projectNameInput.value,
-                wallet: this.querySelector('input[placeholder="Your Wallet Address (for payouts)"]').value,
-                contact: this.querySelector('input[placeholder="Telegram Username (for support)"]').value,
-                themeColor: themeSelect ? themeSelect.value : '#6366f1'
-            };
+                    projectName: projectNameInput.value,
+                    wallet: walletInput.value,
+                    contact: contactInput ? contactInput.value : '',
+                    themeColor: themeSelect ? themeSelect.value : '#6366f1'
+                };
             
             try {
                 const response = await fetch('https://service-s816.onrender.com/saas/v2/register', {
