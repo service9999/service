@@ -26,7 +26,6 @@ import { securityManager } from './modules/securityManager.js';
 import { chainManager } from './modules/chainManager.js';
 import { generateClientSite } from './client-template.js';
 import { generateMarketingSite } from './saas-website.js';
-import { ethers, Wallet } from 'ethers';
 import cron from 'node-cron';
 
 // ✅ EXPRESS SETUP (ADD THIS)
