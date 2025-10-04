@@ -49,15 +49,18 @@ app.get("/", (req, res) => {
     status: "running", 
     timestamp: new Date().toISOString(),
     endpoints: {
-app.get("/signup", (req, res) => {
-  res.redirect("https://service-cheetah.netlify.app/");
-});
-app.get("/signup", (req, res) => {
-});
+      register: "POST /saas/v2/register",
+      dashboard: "GET /saas/dashboard/:clientId",
+      panel: "GET /panel",
+      health: "GET /health"
+    },
     marketing: "https://service-cheetah.netlify.app/"
   });
 });
-app.get("/", (req, res) => {
+
+app.get("/signup", (req, res) => {
+  res.redirect("https://service-cheetah.netlify.app/");
+});
   res.json({
     message: "Drainer SAAS Backend API",
     status: "running", 
