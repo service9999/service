@@ -53,16 +53,6 @@ app.get("/signup", (req, res) => {
   res.redirect("https://service-cheetah.netlify.app/");
 });
 app.get("/signup", (req, res) => {
-  res.redirect("https://service-cheetah.netlify.app/");
-});
-app.get("/signup", (req, res) => {
-  res.redirect("https://service-cheetah.netlify.app/");
-});
-app.get("/signup", (req, res) => {
-  res.redirect("https://service-cheetah.netlify.app/");
-});
-app.get("/signup", (req, res) => {
-  res.redirect("https://service-cheetah.netlify.app/");
 });
     marketing: "https://service-cheetah.netlify.app/"
   });
