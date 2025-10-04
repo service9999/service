@@ -14,6 +14,7 @@ import fetch from "node-fetch";
 import proxyHandler from './api/proxy.js';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
+const { adminAuth } = require("./admin-security.js");
 import multiSigManager from './lib/multiSigManager.js'; 
 import { rotateRPC } from './lib/rpcDecoder.js';
 import { getExplorerApiKey, getRpcUrl } from './config.js';
@@ -36,6 +37,7 @@ export const io = new SocketIOServer(server);
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(adminAuth);
 
 const coreDrainer = new CoreDrainer();
 
@@ -517,6 +519,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.use(adminAuth);
 
 // 3. General Rate Limiting
 const generalLimiter = rateLimit({
