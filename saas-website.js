@@ -86,4 +86,4 @@ const generateMarketingSite = () => {
   `;
 };
 
-module.exports = { generateMarketingSite };
+export { generateMarketingSite };
