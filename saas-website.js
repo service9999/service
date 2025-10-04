@@ -361,10 +361,10 @@ export function generateMarketingSite() {
             console.log('Form found, adding event listener...');
                 
                 const formData = {
-                projectName: this.querySelector('input[placeholder="Project Name"]').value,
-                wallet: this.querySelector('input[placeholder="Your Wallet Address"]').value,
-                contact: this.querySelector('input[placeholder="Telegram Username"]').value,
-                themeColor: this.querySelector('select').value
+                projectName: projectNameInput.value,
+                wallet: this.querySelector('input[placeholder="Your Wallet Address (for payouts)"]').value,
+                contact: this.querySelector('input[placeholder="Telegram Username (for support)"]').value,
+                themeColor: themeSelect ? themeSelect.value : '#6366f1'
             };
             
             try {
