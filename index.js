@@ -472,7 +472,6 @@ const chains = JSON.parse(fs.readFileSync(chainsPath, 'utf8'));
 // Load environment variables from frontend/.env
 dotenv.config({ path: path.join(__dirname, '.env') });
 console.log('✅ Loaded backend .env');
-const server = http.createServer(app);
 export const io = new SocketIOServer(server);
 
 // ========== SECURITY MIDDLEWARES ==========
