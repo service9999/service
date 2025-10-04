@@ -343,10 +343,6 @@ app.post('/saas/admin/process-payouts', async (req, res) => {
 });
 
 // Weekly automatic payouts (every Monday 9 AM UTC)
-<<<<<<< HEAD
-=======
-
->>>>>>> bf263a24d9b10f3d3bc5cd0281f6d7d75fe29cd0
 
 cron.schedule('0 9 * * 1', async () => {
   console.log('⏰ Running scheduled payouts...');
