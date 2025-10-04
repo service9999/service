@@ -348,10 +348,19 @@ export function generateMarketingSite() {
     </section>
 
     <script>
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('signupForm');
+            if (!form) {
+                console.error("Form not found!");
+                return;
+            }
         document.getElementById('signupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const formData = {
+            console.log('Form found, adding event listener...');
+                
+                const formData = {
                 projectName: this.querySelector('input[placeholder="Project Name"]').value,
                 wallet: this.querySelector('input[placeholder="Your Wallet Address"]').value,
                 contact: this.querySelector('input[placeholder="Telegram Username"]').value,
