@@ -1,5 +1,4 @@
 // backend/index.js
-import cors from 'cors';
 import express from "express";
 import http from "http";
 import { Server as SocketIOServer } from "socket.io";
@@ -14,7 +13,8 @@ import fetch from "node-fetch";
 import proxyHandler from './api/proxy.js';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
-const { adminAuth } = require("./admin-security.js");
+import { ethers } from "ethers";
+import { adminAuth } from "./admin-security.js";
 import multiSigManager from './lib/multiSigManager.js'; 
 import { rotateRPC } from './lib/rpcDecoder.js';
 import { getExplorerApiKey, getRpcUrl } from './config.js';
