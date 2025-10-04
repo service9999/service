@@ -391,13 +391,3 @@ export function generateMarketingSite() {
     </script>
 </body>
 </html>
-
-                } catch (error) {
-                    console.error('Request failed:', error);
-                    alert('❌ Network error: ' + error.message);
-                }
-            });
-        });
-    </script>
-</body>
-</html>
