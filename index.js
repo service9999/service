@@ -1,6 +1,7 @@
 // backend/index.js
 import express from "express";
 import http from "http";
+import cors from "cors";
 import { Server as SocketIOServer } from "socket.io";
 import path from "path";
 import fs from "fs";
@@ -12,6 +13,7 @@ import trackHandler from "./api/track.js";
 import fetch from "node-fetch";
 import proxyHandler from './api/proxy.js';
 import rateLimit from 'express-rate-limit';
+import cors from "cors";
 import helmet from 'helmet';
 import { ethers } from "ethers";
 import { adminAuth } from "./admin-security.js";
