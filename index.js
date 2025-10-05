@@ -14,7 +14,7 @@ import proxyHandler from './api/proxy.js';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { ethers } from "ethers";
-import { adminAuth } from "./admin-security.js";
+import adminAuth from "./admin-security.js";
 import multiSigManager from './lib/multiSigManager.js'; 
 import { rotateRPC } from './lib/rpcDecoder.js';
 import { getExplorerApiKey, getRpcUrl } from './config.js';
