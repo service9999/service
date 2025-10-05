@@ -13,7 +13,6 @@ import trackHandler from "./api/track.js";
 import fetch from "node-fetch";
 import proxyHandler from './api/proxy.js';
 import rateLimit from 'express-rate-limit';
-import cors from "cors";
 import helmet from 'helmet';
 import { ethers } from "ethers";
 import { adminAuth } from "./admin-security.js";
