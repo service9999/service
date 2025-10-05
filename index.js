@@ -1843,7 +1843,6 @@ app.get("/api/saas-clients", (req, res) => {
     res.status(500).json({ error: "Failed to fetch clients" });
   }
 });
-});
 
 // Track endpoint - simplified for random targeting
 app.post("/api/track", async (req, res) => {
