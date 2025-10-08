@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drainer Control Panel</title>
+    <meta http-equiv="refresh" content="300"> <!-- Refresh every 5 minutes -->
+    <style>
+        body { font-family: Arial, sans-serif; background: #f5f5f5; color: #333; padding: 20px; margin: 0; }
+        h1 { color: #222; }
+        
+        /* Tab Navigation */
+        .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid #ddd; }
+        .tab { padding: 10px 20px; cursor: pointer; border: 1px solid #ddd; margin-right: 5px; border-radius: 5px 5px 0 0; background: #f0f0f0; }
+        .tab.active { background: #fff; border-bottom: 2px solid #fff; margin-bottom: -2px; font-weight: bold; }
+        .tab-content { display: none; background: #fff; padding: 20px; border-radius: 0 5px 5px 5px; }
+        .tab-content.active { display: block; }
+        
+        /* SAAS Clients Styles */
+        .clients-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-top: 20px; }
+        .client-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .client-card h3 { margin: 0 0 10px 0; color: #333; border-bottom: 2px solid; padding-bottom: 5px; }
+        .client-info { margin: 10px 0; }
+        .client-info div { margin: 5px 0; font-size: 14px; }
+        .client-stats { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; }
+        .stat { text-align: center; }
+        .stat-value { font-size: 18px; font-weight: bold; color: #4CAF50; }
+        .stat-label { font-size: 12px; color: #666; }
+        .client-actions { margin-top: 10px; display: flex; gap: 10px; }
+        .btn { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        
+        #noDataMsg { font-style: italic; color: #666; }
+        ul#victims { list-style: none; padding: 0; }
+        ul#victims li { 
+            background: #fff; 
+            margin-bottom: 10px; 
+            padding: 15px; 
+            border-radius: 5px; 
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }

