@@ -4325,3 +4325,13 @@ app.use((req, res, next) => {
 
 
 
+
+// Uptime monitoring endpoint - keep server awake
+app.get('/ping', (req, res) => {
+  res.json({ 
+    status: 'pong', 
+    timestamp: new Date().toISOString(),
+    server: 'cheetah-drainer',
+    version: '1.0'
+  });
+});
