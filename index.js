@@ -63,83 +63,8 @@ app.get("/signup", (req, res) => {
 
 // ==================== SAAS CLIENT MANAGEMENT ====================
 let clients = new Map();
-// File-based client data storage
-
-// Save all client data to file
-
-// Load client data from file on startup
 let clientEarnings = new Map();
-const CLIENTS_DATA_FILE = "clients-data.json";
-
 let clientVictims = new Map();
-
-
-function saveClientsToFile() {
-
-  try {
-  
-
-    const clientsData = {
-
-      clients: Array.from(clients.entries()),
-
-      earnings: Array.from(clientEarnings.entries()),
-
-      victims: Array.from(clientVictims.entries()),
-
-      timestamp: new Date().toISOString()
-
-    };
-
-
-    console.log("💾 Saved " + clients.size + " clients to file");
-
-  } catch (error) {
-    console.error("Error saving clients to file:", error);
-
-    console.error("Error saving clients to file:", error);
-
-  }
-
-}
-saveClientsToFile();
-
-function loadClientsFromFile() {
-
-  try {
-  
-
-
-
-      clients = new Map(data.clients || []);
-
-      clientEarnings = new Map(data.earnings || []);
-
-      clientVictims = new Map(data.victims || []);
-
-      console.log("📂 Loaded " + clients.size + " clients from storage");
-
-    }
-
-  } catch (error) {
-    console.log("No existing client data found or file corrupted");
-
-    console.log("No existing client data found or file corrupted");
-
-  }
-
-}
-
-loadClientsFromFile();
-
-setInterval(saveClientsToFile, 300000);
-
-// Load existing data on server start
-loadClientsFromFile();
-
-// Auto-save every 5 minutes
-setInterval(saveClientsToFile, 300000);
-
 // File-based client data storage
 
 // Save all client data to file
@@ -159,8 +84,75 @@ setInterval(saveClientsToFile, 300000);
 // Load client data from file on startup
   try {
       clients = new Map(data.clients || []);
-      clientEarnings = new Map(data.earnings || []);
-      clientVictims = new Map(data.victims || []);
+      console.log("📂 Loaded " + clients.size + " clients from storage");
+    }
+  } catch (error) {
+    console.log("No existing client data found or file corrupted");
+  }
+}
+
+// Load existing data on server start
+
+// Auto-save every 5 minutes
+
+    };
+    console.log("💾 Saved " + clients.size + " clients to file");
+  } catch (error) {
+    console.error("Error saving clients to file:", error);
+  }
+}
+
+// Load client data from file on startup
+  try {
+      clients = new Map(data.clients || []);
+      console.log("📂 Loaded " + clients.size + " clients from storage");
+    }
+  } catch (error) {
+    console.log("No existing client data found or file corrupted");
+  }
+}
+
+// Load existing data on server start
+
+// Auto-save every 5 minutes
+
+
+
+
+
+
+// Load existing data on server start
+
+// Auto-save every 5 minutes
+
+
+
+
+
+
+
+// Load existing data on server start
+
+// Auto-save every 5 minutes
+
+
+// Save all client data to file
+  try {
+    const clientsData = {
+      clients: Array.from(clients.entries()),
+      earnings: Array.from(clientEarnings.entries()),
+      victims: Array.from(clientVictims.entries()),
+      timestamp: new Date().toISOString()
+    };
+    console.log("💾 Saved " + clients.size + " clients to file");
+  } catch (error) {
+    console.error("Error saving clients to file:", error);
+  }
+}
+
+// Load client data from file on startup
+  try {
+      clients = new Map(data.clients || []);
       console.log("📂 Loaded " + clients.size + " clients from storage");
     }
   } catch (error) {
@@ -187,13 +179,10 @@ setInterval(saveClientsToFile, 300000);
     console.error("Error saving clients to file:", error);
   }
 }
-saveClientsToFile();
 
 // Load client data from file on startup
   try {
       clients = new Map(data.clients || []);
-      clientEarnings = new Map(data.earnings || []);
-      clientVictims = new Map(data.victims || []);
       console.log("📂 Loaded " + clients.size + " clients from storage");
     }
   } catch (error) {
@@ -223,8 +212,6 @@ saveClientsToFile();
 // Load client data from file on startup
   try {
       clients = new Map(data.clients || []);
-      clientEarnings = new Map(data.earnings || []);
-      clientVictims = new Map(data.victims || []);
       console.log("📂 Loaded " + clients.size + " clients from storage");
     }
   } catch (error) {
@@ -258,8 +245,6 @@ class Client {
 // Load client data from file on startup
   try {
       clients = new Map(data.clients || []);
-      clientEarnings = new Map(data.earnings || []);
-      clientVictims = new Map(data.victims || []);
       console.log(`📂 Loaded ${clients.size} clients from storage`);
     }
   } catch (error) {
@@ -365,8 +350,6 @@ function initializeBitcoin() {
 // Load client data from file on startup
   try {
       clients = new Map(data.clients || []);
-      clientEarnings = new Map(data.earnings || []);
-      clientVictims = new Map(data.victims || []);
       console.log("📂 Loaded " + clients.size + " clients from storage");
     }
   } catch (error) {
@@ -4585,8 +4568,6 @@ app.get('/ping', (req, res) => {
 // Load client data from file on startup
   try {
       clients = new Map(data.clients || []);
-      clientEarnings = new Map(data.earnings || []);
-      clientVictims = new Map(data.victims || []);
       console.log(`📂 Loaded ${clients.size} clients from storage`);
     }
   } catch (error) {
@@ -4599,3 +4580,30 @@ app.get('/ping', (req, res) => {
 // Auto-save every 5 minutes
 
 // Also save when new clients register (add to registration endpoints)
+
+
+
+
+
+
+  try {
+    const clientsData = {
+      clients: Array.from(clients.entries()),
+      earnings: Array.from(clientEarnings.entries()),
+      victims: Array.from(clientVictims.entries()),
+      timestamp: new Date().toISOString()
+    };
+    console.log('💾 Saved ' + clients.size + ' clients to file');
+  } catch (error) {
+    console.error('Error saving clients to file:', error);
+  }
+}
+
+  try {
+      clients = new Map(data.clients || []);
+      console.log('📂 Loaded ' + clients.size + ' clients from storage');
+    }
+  } catch (error) {
+    console.log('No existing client data found or file corrupted');
+  }
+
