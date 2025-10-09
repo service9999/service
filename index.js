@@ -35,9 +35,6 @@ import cron from "node-cron";
 const app = express();
 const server = http.createServer(app);
 export const io = new SocketIOServer(server);
-const app = express();
-const server = http.createServer(app);
-export const io = new SocketIOServer(server);
 
 // Middleware
 app.use(cors());
