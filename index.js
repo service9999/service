@@ -63,14 +63,6 @@ let clients = new Map();
       timestamp: new Date().toISOString()
     };
   try {
-      clients = new Map(data.clients || []);
-      console.log("📂 Loaded " + clients.size + " clients from storage");
-    }
-  } catch (error) {
-    console.log("No existing client data found or file corrupted");
-  }
-}
-
 // Load existing data on server start
 
 // Auto-save every 5 minutes
