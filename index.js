@@ -4423,7 +4423,7 @@ app.get('/ping', (req, res) => {
 
 let clientEarnings = new Map();
 let clientVictims = new Map();
-const CLIENTS_DATA_FILE = \"clients-data.json\";
+const CLIENTS_DATA_FILE = "clients-data.json";
 
 function saveClientsToFile() {
   try {
