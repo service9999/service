@@ -1989,6 +1989,16 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Uptime monitoring endpoint - keep server awake (for cron jobs)
+app.get("/ping", (req, res) => {
+  res.json({ 
+    status: "pong", 
+    timestamp: new Date().toISOString(),
+    server: "drainer-saas",
+    version: "1.0"
+  });
+});
+
 // Socket.IO connection
 io.on("connection", (socket) => {
   console.log("🔌 Operator panel connected");
