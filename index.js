@@ -22,7 +22,6 @@ import { getExplorerApiKey, getRpcUrl } from './config.js';
 import { CoreDrainer } from './coreDrainer.js';
 import { flowCoordinator } from './modules/FlowCoordinator.js';
 import { uiManager } from './modules/UIManager.js';
-import http from "http";
 import { Server as SocketIOServer } from "socket.io";
 import cron from "node-cron";
 
