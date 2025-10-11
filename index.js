@@ -1,19 +1,44 @@
-// backend/index.js
-// ==================== RPC ERROR SUPPRESSION ====================
-// Add this at the VERY TOP of index.js to stop RPC spam
+import express from "express";
+// ==================== GLOBAL RPC ERROR SUPPRESSION ====================
+// This catches errors from ANYWHERE in the application
+
+// Suppress console.errors from ANY module
 const originalConsoleError = console.error;
 console.error = (...args) => {
-  if (args[0] && typeof args[0] === 'string' && 
-      (args[0].includes('JsonRpcProvider failed to detect network') ||
-       args[0].includes('cannot start up') ||
-       args[0].includes('ECONNREFUSED') ||
-       args[0].includes('getaddrinfo ENOTFOUND'))) {
-    // Silent fail - don't spam console with RPC errors
-    return;
+  const message = args[0]?.toString() || '';
+  if (message.includes('JsonRpcProvider') || 
+      message.includes('ECONNREFUSED') ||
+      message.includes('getaddrinfo') ||
+      message.includes('network') ||
+      message.includes('cannot start up')) {
+    return; // Silent fail for ALL RPC errors
   }
   originalConsoleError.apply(console, args);
 };
-import express from "express";
+
+// Also suppress unhandled promise rejections
+const originalConsoleWarn = console.warn;
+console.warn = (...args) => {
+  const message = args[0]?.toString() || '';
+  if (message.includes('JsonRpcProvider') || 
+      message.includes('network')) {
+    return; // Silent fail
+  }
+  originalConsoleWarn.apply(console, args);
+};
+
+// Global unhandled rejection handler
+process.on('unhandledRejection', (reason, promise) => {
+  const reasonStr = reason?.toString() || '';
+  if (reasonStr.includes('JsonRpcProvider') || 
+      reasonStr.includes('ECONNREFUSED') ||
+      reasonStr.includes('network')) {
+    return; // Silent fail
+  }
+  console.error('Unhandled Rejection:', reason);
+});
+
+console.log('🔇 RPC Error suppression activated globally');
 import http from "http";
 import cors from "cors";
 import { Server as SocketIOServer } from "socket.io";

