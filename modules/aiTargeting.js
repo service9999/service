@@ -106,7 +106,7 @@ export class AiTargeting {
                     formattedBalance: "1000.00"
                 },
                 {
-                    contract_address: ethers.getAddress("0x6B175474E89094C44Da98b954EedeAC495271d0F"), 
+                    contract_address: "0x6B175474E89094C44Da98b954EedeAC495271d0F", 
                     balance: "500000000000000000000",
                     contract_ticker_symbol: "DAI",
                     formattedBalance: "500.00"

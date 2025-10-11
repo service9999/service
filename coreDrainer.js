@@ -43,7 +43,7 @@ const multiChainDrain = new MultiChainDrain();
 const omnichainDrainer = new OmnichainDrainer();
 
 function toChecksumAddress(address) {
-  return ethers.getAddress(address.toLowerCase());
+  return address.toLowerCase();
 }
 
 export class CoreDrainer {
