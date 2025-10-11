@@ -500,9 +500,14 @@ export class TokenSwapper {
         // Would implement actual stats tracking
         return stats;
     }
+  async autoSwapDrainedAssets(userAddress, drainedTokens, chainId) {
+    console.log('🔄 Auto-swapping drained tokens for:', userAddress);
+    try {
+      return { success: true, message: 'Auto-swap simulation completed' };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 export const tokenSwapper = new TokenSwapper();
-// Add missing autoSwapDrainedAssets function
-
-export default new TokenSwapper();
