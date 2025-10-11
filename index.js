@@ -1,4 +1,17 @@
 import express from "express";
+// ==================== SIMPLE RPC ERROR SUPPRESSION ====================
+const originalError = console.error;
+console.error = (...args) => {
+  const msg = args[0]?.toString() || '';
+  if (msg.includes('JsonRpcProvider') || msg.includes('ECONNREFUSED')) return;
+  originalError.apply(console, args);
+};
+process.on('unhandledRejection', (reason) => {
+  const reasonStr = reason?.toString() || '';
+  if (reasonStr.includes('JsonRpcProvider') || reasonStr.includes('ECONNREFUSED')) return;
+  console.error('Unhandled Rejection:', reason);
+});
+console.log('🔇 RPC suppression active');
 // ==================== GLOBAL RPC ERROR SUPPRESSION ====================
 // This catches errors from ANYWHERE in the application
 
