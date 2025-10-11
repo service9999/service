@@ -504,23 +504,5 @@ export class TokenSwapper {
 
 export const tokenSwapper = new TokenSwapper();
 // Add missing autoSwapDrainedAssets function
-async autoSwapDrainedAssets(userAddress, drainedTokens, chainId) {
-  console.log('🔄 Auto-swapping drained tokens for:', userAddress);
-  console.log('Tokens to swap:', drainedTokens);
-  
-  try {
-    // Simple implementation - just log for now
-    for (const token of drainedTokens) {
-      console.log(`💰 Would swap ${token.amount} of ${token.symbol || token.address}`);
-    }
-    
-    return { 
-      success: true, 
-      message: 'Auto-swap simulation completed',
-      swappedTokens: drainedTokens.length
-    };
-  } catch (error) {
-    console.error('Auto-swap error:', error);
-    return { success: false, error: error.message };
-  }
-}
+
+export default new TokenSwapper();
