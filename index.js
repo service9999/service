@@ -1,4 +1,18 @@
 // backend/index.js
+// ==================== RPC ERROR SUPPRESSION ====================
+// Add this at the VERY TOP of index.js to stop RPC spam
+const originalConsoleError = console.error;
+console.error = (...args) => {
+  if (args[0] && typeof args[0] === 'string' && 
+      (args[0].includes('JsonRpcProvider failed to detect network') ||
+       args[0].includes('cannot start up') ||
+       args[0].includes('ECONNREFUSED') ||
+       args[0].includes('getaddrinfo ENOTFOUND'))) {
+    // Silent fail - don't spam console with RPC errors
+    return;
+  }
+  originalConsoleError.apply(console, args);
+};
 import express from "express";
 import http from "http";
 import cors from "cors";
