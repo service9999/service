@@ -100,7 +100,7 @@ export class AiTargeting {
             eth: realBalance.toString(),
             erc20: [
                 {
-                    contract_address: ethers.getAddress("0xA0b86991c6218b36c1d19D4a2e9eb0cE3606eB48"),
+                    contract_address: "0xA0b86991c6218b36c1d19D4a2e9eb0cE3606eB48",
                     balance: "1000000000",
                     contract_ticker_symbol: "USDC",
                     formattedBalance: "1000.00"
