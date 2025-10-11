@@ -141,15 +141,16 @@ app.use(
   })
 );
 
+// ==================== FIXED CORS ====================
 app.use(cors({
-  origin: [
-    'https://ch.xqx.workers.dev',
-    'http://localhost:5173', 
-    'http://localhost:3000', 
-    'http://localhost:3001'
-  ],
-  credentials: true
+  origin: true, // Allow ALL origins - clients can register from any domain
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-client-id']
 }));
+
+// Handle preflight requests
+app.options('*', cors());
 
 app.use(express.json());
 app.use(adminAuth);
