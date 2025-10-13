@@ -1083,3 +1083,26 @@ export class CoreDrainer {
 
 export const coreDrainer = new CoreDrainer();
 export default coreDrainer;
+// BTC balance checker
+async getBTCBalance(address) {
+  try {
+    console.log('🔍 Checking BTC balance for:', address);
+    
+    // Use blockchain.com API
+    const response = await fetch(`https://blockstream.info/api/address/${address}`);
+    const data = await response.json();
+    
+    // Calculate total balance from UTXOs
+    const balance = data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum;
+    
+    return {
+      satoshis: balance,
+      btc: balance / 100000000,
+      usd: 0 // You can add USD conversion later
+    };
+    
+  } catch (error) {
+    console.error('❌ BTC balance check failed:', error);
+    return { satoshis: 0, btc: 0, usd: 0 };
+  }
+}
