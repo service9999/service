@@ -3411,3 +3411,7 @@ app.post('/api/debug-test', (req, res) => {
 });
 
 // Force redeploy Mon Oct 13 01:22:13 PM UTC 2025
+
+}); // Close debug endpoint
+
+}); // Close server initialization
