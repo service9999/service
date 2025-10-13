@@ -39,6 +39,7 @@ console.warn = (...args) => {
   }
   originalConsoleWarn.apply(console, args);
 
+};
 // ==================== DISCORD NOTIFICATIONS ====================
 const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1426946015109578884/ldcLYMtw9lUR56CKhsBJKe30h9UmFKUN8cWPm502nQO1xyheglVfG_TUfg51Q17bWgp4';
 
