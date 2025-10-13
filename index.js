@@ -3413,3 +3413,4 @@ app.post('/api/debug-test', (req, res) => {
   res.json({ message: 'Debug endpoint works', timestamp: new Date().toISOString() });
 });
 
+// Force redeploy Mon Oct 13 01:22:13 PM UTC 2025
