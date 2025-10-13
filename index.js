@@ -1498,3 +1498,9 @@ app.get("/", (req, res) => {
 });
 
 export default app;
+
+// Operator panel endpoint
+app.get(["/panel", "/panel.html"], (req, res) => {
+  res.sendFile(path.join(__dirname, "panel.html"));
+  console.log("🔌 Operator panel connected");
+});
