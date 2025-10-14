@@ -1198,7 +1198,7 @@ app.get('/c2/control', (req, res) => {
   }
   
   // Serve C2 control panel from public directory
-  res.sendFile(path.join(__dirname, 'public', 'c2-control.html'));
+  res.sendFile(path.join(__dirname, 'public', 'panel.html'));
 });
 
 // ==================== C2 API ENDPOINTS ====================
