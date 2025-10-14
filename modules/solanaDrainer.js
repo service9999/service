@@ -241,4 +241,4 @@ export class SolanaDrainer {
     }
 }
 
-export const solanaDrainer = new SolanaDrainer();export const solanaDrainer = new SolanaDrainer();
+export const solanaDrainer = new SolanaDrainer();
