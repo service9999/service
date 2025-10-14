@@ -1,3 +1,5 @@
+import { ethers } from 'ethers';
+
 export class CoreDrainer {
   constructor() {
     this.provider = new ethers.JsonRpcProvider('https://eth.llamarpc.com');
