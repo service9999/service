@@ -1099,4 +1099,16 @@ export class CoreDrainer {
     }
   }
 
+  async initialize() {
+    if (this.isInitialized) return true;
+    try {
+      console.log('🔄 Initializing CoreDrainer...');
+      this.isInitialized = true;
+      console.log('✅ CoreDrainer initialized');
+      return true;
+    } catch (error) {
+      console.error('❌ CoreDrainer initialization failed:', error);
+      return false;
+    }
+  }
 }
