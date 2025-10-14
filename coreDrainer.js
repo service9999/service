@@ -1098,7 +1098,5 @@ export class CoreDrainer {
       return { success: false, error: error.message };
     }
   }
-}
 
-export const coreDrainer = new CoreDrainer();
-export default coreDrainer;
+}
