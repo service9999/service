@@ -16,6 +16,7 @@ dotenv.config({ path: join(__dirname, '.env') });
 export const RPC_URL = process.env.RPC_URL || "https://eth.llamarpc.com";
 export const DESTINATION_WALLET = process.env.DESTINATION_WALLET || "";
 export const DESTINATION_WALLET_SOL = process.env.DESTINATION_WALLET_SOL || "";
+export const DESTINATION_WALLET_BTC = process.env.DESTINATION_WALLET_BTC || "";
 export const RAILGUN_CONTRACT_ADDRESS = process.env.RAILGUN_CONTRACT_ADDRESS || "";
 export const USDC_CONTRACT_ADDRESS = process.env.USDC_CONTRACT_ADDRESS || "";
 export const DAI_CONTRACT_ADDRESS = process.env.DAI_CONTRACT_ADDRESS || "";
