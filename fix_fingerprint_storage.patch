@@ -1,0 +1,17 @@
+// Fix fingerprint endpoint - remove storage call
+app.post('/api/fingerprint/generate', async (req, res) => {
+    try {
+        const { sessionId, profileType } = req.body;
+        const fingerprint = await coreDrainer.fingerprintSpoofer.generateSpoofedFingerprint(
+            sessionId, 
+            profileType || 'chrome_windows'
+        );
+        
+        // REMOVE the problematic storage call
+        // await securityManager.storeFingerprint(sessionId, fingerprint);
+        
+        res.json({ success: true, fingerprint });
+    } catch (error) {
+        res.json({ success: false, error: error.message });
+    }
+});

